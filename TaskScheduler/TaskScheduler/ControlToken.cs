@@ -10,7 +10,7 @@ namespace TaskScheduler
     {
         private bool _paused = false;
         private bool _terminated = false;
-        private readonly object _lock = new object();
+        private readonly object _lock = new();
 
         public bool Paused { get { return _paused; } private set { _paused = value; } }
 

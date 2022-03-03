@@ -21,7 +21,7 @@ namespace TaskScheduler
         public enum TaskPriority
         {
             Low = 5,
-            BelowNormaln = 4,
+            BelowNormal = 4,
             Normal = 3,
             AboveNormal = 2,
             High = 1
@@ -94,6 +94,5 @@ namespace TaskScheduler
             string jsonString = File.ReadAllText(fileName);
             return JsonSerializer.Deserialize<MyTask>(jsonString);
         }
-
     }
 }
