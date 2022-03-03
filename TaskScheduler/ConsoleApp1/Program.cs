@@ -33,7 +33,7 @@ scheduler.AddTask(new TaskScheduler.MyTask("t2", () =>
          System.Console.WriteLine($"T2 {i}");
          Thread.Sleep(500);
      }
- }, new DateTime(2023, 2, 22, 0, 0, 0), 50, 1, token2, MyTask.TaskPriority.Normal));
+ }, new DateTime(2023, 2, 22, 0, 0, 0), 50, 1, token2, MyTask.TaskPriority.AboveNormal));
 scheduler.Start();
 Thread.Sleep(3000);
 //token1.Pause();

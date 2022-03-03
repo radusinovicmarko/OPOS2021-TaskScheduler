@@ -10,11 +10,7 @@ namespace TaskScheduler
 
         private PriorityQueue<MyTask, MyTask.TaskPriority> _scheduledTasks = new (new MyTaskComparer());
 
-        private List<Thread> _runningThreads;
-
         private List<MyTask> _runningTasks;
-
-        private Dictionary<MyTask, Thread> _pausedThreads = new ();
 
         private object _lock = new object();
 
@@ -25,14 +21,13 @@ namespace TaskScheduler
         {
             _maxNumberOfCores = maxNumberOfCores;
             _maxNumberOfConcurrentTasks = maxNumberOfConcurrentTasks;
-            _runningThreads = new List<Thread>(maxNumberOfCores);
             _runningTasks = new List<MyTask>(maxNumberOfCores);
             for (int i = 0; i < maxNumberOfCores; i++)
-            {
                 _runningTasks.Add(null);
-                _runningThreads.Add(null);
-            }
         }
+
+        //Adding tasks when maxNoOfConc. > maxNoOfCores
+        //State = Ready when adding task of higher priority then one in the queue
 
         public void AddTask(MyTask myTask)
         {
@@ -41,30 +36,37 @@ namespace TaskScheduler
             {
                 if (_runningTasks.Count(task => task != null) >= maxNumberOfTasks)
                 {
-                    MyTask minPriorityTask = _runningTasks.ElementAt(0);
+                    MyTask? minPriorityTask = _runningTasks.Find(task => task != null);
                     int index = 0;
                     for (int i = 1; i < _runningTasks.Count; i++)
-                        if (_runningTasks.ElementAt(i).Priority > minPriorityTask.Priority)
+                        if (_runningTasks.ElementAt(i) != null && _runningTasks.ElementAt(i).Priority > minPriorityTask.Priority)
                         {
                             minPriorityTask = _runningTasks.ElementAt(i);
                             index = i;
                         }
-                    if (minPriorityTask.Priority > myTask.Priority)
+                    if (minPriorityTask?.Priority > myTask.Priority)
                     {
                         minPriorityTask.ControlToken?.Pause();
                         minPriorityTask.State = MyTask.TaskState.Paused;
                         _scheduledTasks.Enqueue(minPriorityTask, minPriorityTask.Priority);
-                        _pausedThreads.Add(minPriorityTask, _runningThreads.ElementAt(index));
                         Thread t = new Thread(() => ThreadCoreExecution(index));
-                        _runningThreads[index] = t;
                         myTask.State = MyTask.TaskState.Ready;
                         _scheduledTasks.Enqueue(myTask, myTask.Priority);
                         t.Start();
                         return;
                     }
                 }
-                if (_scheduledTasks.Count < maxNumberOfTasks)
-                    myTask.State = MyTask.TaskState.Ready;
+                //if (_scheduledTasks.Count < maxNumberOfTasks)
+                  //  myTask.State = MyTask.TaskState.Ready;
+                /*int counter = 0;
+                foreach (var task in _scheduledTasks.UnorderedItems)
+                {
+                    if (counter < maxNumberOfTasks)
+                        task.Element.State = MyTask.TaskState.Ready;
+                    else
+                        task.Element.State = MyTask.TaskState.Created;
+                    counter++;
+                }*/
                 _scheduledTasks.Enqueue(myTask, myTask.Priority);
                 Monitor.PulseAll(_lock);
             }
@@ -80,7 +82,6 @@ namespace TaskScheduler
                 int iCopy = i;
                 Thread t = new Thread(() => ThreadCoreExecution(iCopy));
                 t.Start();
-                _runningThreads[iCopy] = t;
             }
         }
 
@@ -117,8 +118,10 @@ namespace TaskScheduler
                             _scheduledTasks.Dequeue();
                             return;
                         }
-                        if (nextTask.State == MyTask.TaskState.Ready)
+                        else if (nextTask.State == MyTask.TaskState.Ready)
                             _scheduledTasks.Dequeue();
+                        else
+                            continue;
                     }
                     Thread cancelTaskThread = new Thread(() => CancelTask(nextTask));
                     cancelTaskThread.Start();

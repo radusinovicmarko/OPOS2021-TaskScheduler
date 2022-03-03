@@ -57,7 +57,7 @@ namespace TaskScheduler
         public MyTask(string name, Action action, DateTime deadline, double maxExecTime, int maxDegreeOfParalellism = 1, ControlToken? token = null, TaskPriority priority = TaskPriority.Normal)
         {
             this.name = name;
-            _state = TaskState.Created;
+            _state = TaskState.Ready;
             _action = action;
             _deadline = deadline;
             _maxExecTime = maxExecTime;
@@ -69,7 +69,7 @@ namespace TaskScheduler
         public MyTask(string name, Action action, DateTime deadline, double maxExecTime, int maxDegreeOfParalellism = 1, TaskPriority priority = TaskPriority.Normal)
         {
             this.name = name;
-            _state = TaskState.Created;
+            _state = TaskState.Ready;
             _action = action;
             _deadline = deadline;
             _maxExecTime = maxExecTime;
