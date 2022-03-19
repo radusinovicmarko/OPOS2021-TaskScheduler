@@ -6,7 +6,7 @@ using TaskScheduler;
 TaskScheduler.TaskScheduler scheduler = new TaskScheduler.TaskScheduler(2, 10);
 CancellationTokenSource cts = new CancellationTokenSource();
 ControlToken? token1 = new();
-scheduler.AddTask(new TaskScheduler.MyTask("t1",() =>
+scheduler.AddTask(new TaskScheduler.MyTask(() =>
 {
     for (int i = 0; i < 20; i++)
     {
@@ -18,10 +18,10 @@ scheduler.AddTask(new TaskScheduler.MyTask("t1",() =>
         System.Console.WriteLine($"T1 {i}");
         Thread.Sleep(2000);
     }
-}, new DateTime(2023, 2, 21, 22, 37, 0), 200, 1, token1, MyTask.TaskPriority.Normal));
+}, new DateTime(2023, 2, 21, 22, 37, 0), 200, 1, token1, MyTask.TaskPriority.AboveNormal));
 cts = new CancellationTokenSource();
 ControlToken? token2 = new();
-scheduler.AddTask(new TaskScheduler.MyTask("t2", () =>
+/*scheduler.AddTask(new TaskScheduler.MyTask(() =>
  {
      for (int i = 0; i < 20; i++)
      {
@@ -33,13 +33,14 @@ scheduler.AddTask(new TaskScheduler.MyTask("t2", () =>
          System.Console.WriteLine($"T2 {i}");
          Thread.Sleep(500);
      }
- }, new DateTime(2023, 2, 22, 0, 0, 0), 50, 1, token2, MyTask.TaskPriority.AboveNormal));
+ }, new DateTime(2023, 2, 22, 0, 0, 0), 50, 1, token2, MyTask.TaskPriority.AboveNormal));*/
+scheduler.AddTask(new EdgeDetectionTask(new DateTime(2023, 2, 22, 0, 0, 0), 20000, 3, token2, MyTask.TaskPriority.High, new Resource("C:\\Users\\User20\\Desktop\\test2.jfif"), new Resource("C:\\Users\\User20\\Desktop\\test2.jfif"), new Resource("C:\\Users\\User20\\Desktop\\test3.png")));
 scheduler.Start();
 Thread.Sleep(3000);
-//token1.Pause();
+//token2.Pause();
 cts = new CancellationTokenSource();
 ControlToken? token3 = new();
-scheduler.AddTask(new TaskScheduler.MyTask("t3",() =>
+/*scheduler.AddTask(new TaskScheduler.MyTask(() =>
 {
     for (int i = 0; i < 10; i++)
     {
@@ -48,10 +49,11 @@ scheduler.AddTask(new TaskScheduler.MyTask("t3",() =>
         System.Console.WriteLine($"T3 {i}");
         Thread.Sleep(1500);
     }
-}, new DateTime(2023, 2, 22, 0, 0, 0), 20, 1, token3, MyTask.TaskPriority.High));
+}, new DateTime(2023, 2, 22, 0, 0, 0), 20, 1, token3, MyTask.TaskPriority.High));*/
+scheduler.AddTask(new EdgeDetectionTask(new DateTime(2023, 2, 22, 0, 0, 0), 2000, 3, token3, MyTask.TaskPriority.High, new Resource("C:\\Users\\User20\\Desktop\\test.jpg")/*, new Resource("C:\\Users\\User20\\Desktop\\test2.jfif"), new Resource("C:\\Users\\User20\\Desktop\\test3.png")*/));
 Console.WriteLine("Hello, World!");
 ControlToken? token4 = new();
-scheduler.AddTask(new TaskScheduler.MyTask("t4", () =>
+scheduler.AddTask(new TaskScheduler.MyTask(() =>
 {
     for (int i = 0; i < 10; i++)
     {
@@ -62,4 +64,4 @@ scheduler.AddTask(new TaskScheduler.MyTask("t4", () =>
     }
 }, new DateTime(2023, 2, 22, 0, 0, 0), 20, 1, token4, MyTask.TaskPriority.BelowNormal));
 Thread.Sleep(10000);
-//token1.Resume();
+//token2.Resume();

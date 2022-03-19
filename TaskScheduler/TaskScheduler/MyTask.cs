@@ -27,18 +27,18 @@ namespace TaskScheduler
             High = 1
         }
 
-        private TaskState _state;
-        private readonly Action _action;
-        private readonly DateTime _deadline;
-        private readonly double _maxExecTime;
-        private int _maxDegreeOfParalellism;
-        private bool _terminated = false;
-        private readonly ControlToken? _controlToken;
-        private readonly TaskPriority _priority;
+        protected TaskState _state;
+        protected Action _action;
+        protected readonly DateTime _deadline;
+        protected readonly double _maxExecTime;
+        protected int _maxDegreeOfParalellism;
+        protected bool _terminated = false;
+        protected readonly ControlToken? _controlToken;
+        protected readonly TaskPriority _priority;
+        //ReadWriteLock
+        protected List<Resource>? _resources = null;
 
-        public string name;
-
-        public int MaxDegreeOfParalellism => _maxDegreeOfParalellism;
+        public int MaxDegreeOfParalellism { get { return _maxDegreeOfParalellism; } set { _maxDegreeOfParalellism = value; } }
 
         public TaskState State { get { return _state; } set { _state = value; } }
 
@@ -52,11 +52,13 @@ namespace TaskScheduler
 
         public double MaxExecTime => _maxExecTime;
 
-        public Action Action => _action;
+        public Action Action { get { return _action; } protected set { _action = value; } }
 
-        public MyTask(string name, Action action, DateTime deadline, double maxExecTime, int maxDegreeOfParalellism = 1, ControlToken? token = null, TaskPriority priority = TaskPriority.Normal)
+        public Action Action2 { get; set; }
+        public double Progress { get; set; }
+
+        public MyTask(Action action, DateTime deadline, double maxExecTime, int maxDegreeOfParalellism = 1, ControlToken? token = null, TaskPriority priority = TaskPriority.Normal)
         {
-            this.name = name;
             _state = TaskState.Ready;
             _action = action;
             _deadline = deadline;
@@ -66,9 +68,8 @@ namespace TaskScheduler
             _controlToken = token;
         }
 
-        public MyTask(string name, Action action, DateTime deadline, double maxExecTime, int maxDegreeOfParalellism = 1, TaskPriority priority = TaskPriority.Normal)
+        public MyTask(Action action, DateTime deadline, double maxExecTime, int maxDegreeOfParalellism = 1, TaskPriority priority = TaskPriority.Normal)
         {
-            this.name = name;
             _state = TaskState.Ready;
             _action = action;
             _deadline = deadline;
@@ -76,6 +77,19 @@ namespace TaskScheduler
             _maxDegreeOfParalellism = maxDegreeOfParalellism;
             _priority = priority;
             _controlToken = null;
+        }
+
+        public MyTask(Action action, DateTime deadline, double maxExecTime, int maxDegreeOfParalellism, ControlToken? token, TaskPriority priority, params Resource[] resources)
+        {
+            _state = TaskState.Ready;
+            _action = action;
+            _deadline = deadline;
+            _maxExecTime = maxExecTime;
+            _maxDegreeOfParalellism = maxDegreeOfParalellism;
+            _priority = priority;
+            _controlToken = token;
+            _resources = new List<Resource>();
+            _resources.AddRange(resources.ToArray());
         }
 
         public void Execute()

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace TaskScheduler
 {
-    internal class Resource
+    public class Resource
     {
         private readonly string _path;
         private bool _locked = false;

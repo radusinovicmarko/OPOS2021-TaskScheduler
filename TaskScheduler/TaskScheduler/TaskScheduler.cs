@@ -8,6 +8,8 @@ namespace TaskScheduler
         private readonly int _maxNumberOfConcurrentTasks;
         private bool _started = false;
 
+        //private int _coresTaken = 0;
+
         private PriorityQueue<MyTask, MyTask.TaskPriority> _scheduledTasks = new (new MyTaskComparer());
 
         private List<MyTask> _runningTasks;
@@ -24,6 +26,7 @@ namespace TaskScheduler
             _runningTasks = new List<MyTask>(maxNumberOfCores);
             for (int i = 0; i < maxNumberOfCores; i++)
                 _runningTasks.Add(null);
+            //Process.GetCurrentProcess().ProcessorAffinity = (IntPtr)0xF;
         }
 
         //Adding tasks when maxNoOfConc. > maxNoOfCores
@@ -81,6 +84,7 @@ namespace TaskScheduler
             {
                 int iCopy = i;
                 Thread t = new Thread(() => ThreadCoreExecution(iCopy));
+                t.IsBackground = true;
                 t.Start();
             }
         }
