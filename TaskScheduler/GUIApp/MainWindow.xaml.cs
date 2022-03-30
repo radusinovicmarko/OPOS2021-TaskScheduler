@@ -56,7 +56,7 @@ namespace GUIApp
                 System.Windows.MessageBox.Show("...");
             List<Resource> resources = new List<Resource>();
             foreach (string item in resourcesLB.Items)
-                resources.Add(new Resource(item));
+                resources.Add(new FileResource(item));
             return new EdgeDetectionTask((DateTime)deadlineDTP.Value, maxExecTime, maxDegreeOfParallelism, new ControlToken(), priority, resources.ToArray());
         }
 
@@ -109,6 +109,7 @@ namespace GUIApp
             stackPanel.Children.Add(resumeBtn);
             Button cancelBtn = new Button() { Content = "Cancel", Margin = new Thickness(5, 0, 0, 0) };
             cancelBtn.Click += new RoutedEventHandler((sender, e) => task.ControlToken?.Terminate());
+            //cancelBtn.Click += new RoutedEventHandler((sender, e) => task.Serialize("task.txt"));
             stackPanel.Children.Add(cancelBtn);
             tasksStackPanel.Children.Add(stackPanel);
         }

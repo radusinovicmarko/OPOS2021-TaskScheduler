@@ -2,17 +2,27 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 
 namespace TaskScheduler
 {
+    [Serializable]
     public class EdgeDetectionTask : MyTask
     {
 
         private static int[,] edgeDetectionKernel = new int[,] { { 0, -1, 0 }, { -1, 4, -1 }, { 0, -1, 0 } };
 
         private int noRows = 0;
+
+        public EdgeDetectionTask() 
+        {
+            Action = this.EdgeDetection;
+        }
 
         public EdgeDetectionTask(DateTime deadline, double maxExecTime, int maxDegreeOfParalellism, ControlToken? token, TaskPriority priority, params Resource[] resources) 
             : base(null, deadline, maxExecTime, maxDegreeOfParalellism, token, priority, resources)
@@ -26,17 +36,27 @@ namespace TaskScheduler
         {
             if (_resources.Count == 1)
             {
-                Bitmap? newImage = EdgeDetectionAlgorithm((Bitmap)Bitmap.FromFile(_resources.ElementAt(0).Path), MaxDegreeOfParalellism);
+                Bitmap? newImage = EdgeDetectionAlgorithm((Bitmap)Bitmap.FromFile(((FileResource)_resources.ElementAt(0)).Path), MaxDegreeOfParalellism);
                 newImage?.Save("test" + new Random().Next() + ".jfif");
+                _resourcesProcessed[0] = true;
             }
             else
             {
                 Parallel.For(0, _resources.Count, new ParallelOptions { MaxDegreeOfParallelism = MaxDegreeOfParalellism }, i =>
                  {
-                     Bitmap? newImage = EdgeDetectionAlgorithm((Bitmap)Bitmap.FromFile(_resources.ElementAt(i).Path), 1);
-                     newImage?.Save("test" + i + ".jfif");
+                     if (!_resourcesProcessed[i])
+                     {
+                         Bitmap? newImage = EdgeDetectionAlgorithm((Bitmap)Bitmap.FromFile(((FileResource)_resources.ElementAt(i)).Path), 1);
+                         newImage?.Save("test" + (i*10000 + 50) + ".jfif");
+                         _resourcesProcessed[i] = true;
+                     }
                  });
             }
+        }
+
+        public override void Execute()
+        {
+            Action.Invoke();
         }
 
         private Bitmap? EdgeDetectionAlgorithm(Bitmap clone, int degree)
@@ -117,10 +137,38 @@ namespace TaskScheduler
                     noRows++;
                     Progress = (double)noRows / b.Height;
                 }
-                Action2.Invoke();
+                if (Action2 != null)
+                    Action2.Invoke();
             });
             
             return ControlToken != null ? ControlToken.Terminated ? null : newImg : newImg;
+        }
+
+        public override void Serialize()
+        {
+            string fileName = "EdgeDetectionTask_" + DateTime.Now.Ticks + ".bin";
+            //XmlSerializer serializer = new XmlSerializer(typeof(EdgeDetectionTask));
+            //using StreamWriter writer = new StreamWriter(fileName);
+            //serializer.Serialize(writer, this);
+            //string jsonString = JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
+            //File.WriteAllText(fileName, jsonString);
+            IFormatter formatter = new BinaryFormatter();
+            Stream stream = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
+            formatter.Serialize(stream, this);
+        }
+
+        public static new EdgeDetectionTask? Deserialize(string fileName)
+        {
+            //XmlSerializer serializer = new XmlSerializer(typeof(EdgeDetectionTask));
+            //using FileStream stream = new FileStream(fileName, FileMode.Open);
+            //return (EdgeDetectionTask)serializer.Deserialize(stream);
+            //string jsonString = File.ReadAllText(fileName);
+            //return JsonSerializer.Deserialize<EdgeDetectionTask>(jsonString);
+            IFormatter formatter = new BinaryFormatter();
+            using Stream stream = new FileStream(fileName, FileMode.Open);
+            EdgeDetectionTask task = (EdgeDetectionTask)formatter.Deserialize(stream);
+            task.Action = task.EdgeDetection;
+            return task;
         }
 
         private Bitmap EdgeDetectionAlgorithm2(Bitmap clone)

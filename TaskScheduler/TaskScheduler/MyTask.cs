@@ -4,9 +4,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Text.Json;
+using System.Xml.Serialization;
+using System.Text.Json.Serialization;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace TaskScheduler
 {
+    [Serializable]
+    [XmlInclude(typeof(EdgeDetectionTask))]
     public class MyTask
     {
 
@@ -28,6 +34,7 @@ namespace TaskScheduler
         }
 
         protected TaskState _state;
+        [NonSerialized]
         protected Action _action;
         protected readonly DateTime _deadline;
         protected readonly double _maxExecTime;
@@ -37,6 +44,8 @@ namespace TaskScheduler
         protected readonly TaskPriority _priority;
         //ReadWriteLock
         protected List<Resource>? _resources = null;
+
+        protected List<bool>? _resourcesProcessed = null;
 
         public int MaxDegreeOfParalellism { get { return _maxDegreeOfParalellism; } set { _maxDegreeOfParalellism = value; } }
 
@@ -52,10 +61,22 @@ namespace TaskScheduler
 
         public double MaxExecTime => _maxExecTime;
 
+        [XmlIgnore]
         public Action Action { get { return _action; } protected set { _action = value; } }
 
+        [XmlIgnore]
         public Action Action2 { get; set; }
         public double Progress { get; set; }
+
+        public List<Resource>? Resources => _resources;
+
+        public List<bool>? ResourcesProcessed => _resourcesProcessed;
+
+        public MyTask() 
+        {
+            //_resources = new List<Resource>();
+            //_resourcesProcessed = new List<bool>();
+        }
 
         public MyTask(Action action, DateTime deadline, double maxExecTime, int maxDegreeOfParalellism = 1, ControlToken? token = null, TaskPriority priority = TaskPriority.Normal)
         {
@@ -90,23 +111,39 @@ namespace TaskScheduler
             _controlToken = token;
             _resources = new List<Resource>();
             _resources.AddRange(resources.ToArray());
+            _resourcesProcessed = new List<bool>();
+            foreach (Resource resource in _resources)
+                _resourcesProcessed.Add(false);
         }
 
-        public void Execute()
+        public virtual void Execute()
         {
             Action();
         }
 
-        public void Serialize(string fileName)
+        public virtual void Serialize()
         {
-            string jsonString = JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(fileName, jsonString);
+            string fileName = "MyTask_" + DateTime.Now.Ticks + ".bin";
+            //XmlSerializer serializer = new XmlSerializer(typeof(MyTask));
+            //using StreamWriter writer = new StreamWriter(fileName);
+            //serializer.Serialize(writer, this);
+            //string jsonString = JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
+            //File.WriteAllText(fileName, jsonString);
+            IFormatter formatter = new BinaryFormatter();
+            using Stream stream = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
+            formatter.Serialize(stream, this);
         }
 
         public static MyTask? Deserialize(string fileName)
         {
-            string jsonString = File.ReadAllText(fileName);
-            return JsonSerializer.Deserialize<MyTask>(jsonString);
+            //XmlSerializer serializer = new XmlSerializer(typeof(MyTask));
+            //using FileStream stream = new FileStream(fileName, FileMode.Open);
+            //return (MyTask)serializer.Deserialize(stream);
+            //string jsonString = File.ReadAllText(fileName);
+            //return JsonSerializer.Deserialize<MyTask>(jsonString);
+            IFormatter formatter = new BinaryFormatter();
+            using Stream stream = new FileStream(fileName, FileMode.Open);
+            return (MyTask)formatter.Deserialize(stream);
         }
     }
 }

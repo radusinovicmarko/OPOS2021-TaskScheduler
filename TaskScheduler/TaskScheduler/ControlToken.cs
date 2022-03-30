@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace TaskScheduler
 {
+    [Serializable]
     public class ControlToken
     {
         private bool _paused = false;
@@ -23,11 +24,13 @@ namespace TaskScheduler
         public void Pause()
         {
             _paused = true;
+            Console.WriteLine("paused");
         }
 
         public void Resume()
         {
             _paused = false;
+            Console.WriteLine("resumed");
             lock (_lock)
                 Monitor.PulseAll(_lock);
         }

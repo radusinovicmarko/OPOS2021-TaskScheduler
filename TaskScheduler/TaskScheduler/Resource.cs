@@ -6,18 +6,13 @@ using System.Threading.Tasks;
 
 namespace TaskScheduler
 {
+    [Serializable]
     public class Resource
     {
-        private readonly string _path;
-        private bool _locked = false;
-        private readonly object _lock = new();
+        protected bool _locked = false;
+        protected readonly object _lock = new();
 
-        public Resource(string path)
-        {
-            _path = path;
-        }
-
-        public String Path => _path;
+        public Resource() { }
 
         public object Lock => _lock;
 
