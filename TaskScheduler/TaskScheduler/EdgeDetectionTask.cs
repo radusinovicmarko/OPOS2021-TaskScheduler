@@ -157,12 +157,16 @@ namespace TaskScheduler
 
         public override void Serialize()
         {
-            string fileName = "EdgeDetectionTask_" + DateTime.Now.Ticks + ".bin";
+            string fileName = this.GetType().AssemblyQualifiedName + "_" + DateTime.Now.Ticks + ".bin";
+
             //XmlSerializer serializer = new XmlSerializer(typeof(EdgeDetectionTask));
             //using StreamWriter writer = new StreamWriter(fileName);
             //serializer.Serialize(writer, this);
+
             //string jsonString = JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
             //File.WriteAllText(fileName, jsonString);
+
+            
             IFormatter formatter = new BinaryFormatter();
             Stream stream = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
             formatter.Serialize(stream, this);
@@ -173,8 +177,11 @@ namespace TaskScheduler
             //XmlSerializer serializer = new XmlSerializer(typeof(EdgeDetectionTask));
             //using FileStream stream = new FileStream(fileName, FileMode.Open);
             //return (EdgeDetectionTask)serializer.Deserialize(stream);
+
             //string jsonString = File.ReadAllText(fileName);
             //return JsonSerializer.Deserialize<EdgeDetectionTask>(jsonString);
+
+            
             IFormatter formatter = new BinaryFormatter();
             using Stream stream = new FileStream(fileName, FileMode.Open);
             EdgeDetectionTask task = (EdgeDetectionTask)formatter.Deserialize(stream);

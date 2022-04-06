@@ -65,9 +65,11 @@ namespace TaskScheduler
         public double MaxExecTime => _maxExecTime;
 
         [XmlIgnore]
+        [JsonIgnore]
         public Action Action { get { return _action; } protected set { _action = value; } }
 
         [XmlIgnore]
+        [JsonIgnore]
         public Action Action2 { get; set; }
         public double Progress { get; set; }
 
@@ -135,12 +137,15 @@ namespace TaskScheduler
 
         public virtual void Serialize()
         {
-            string fileName = "MyTask_" + DateTime.Now.Ticks + ".bin";
+            string fileName = this.GetType().AssemblyQualifiedName + "_" + DateTime.Now.Ticks + ".bin";
+
             //XmlSerializer serializer = new XmlSerializer(typeof(MyTask));
             //using StreamWriter writer = new StreamWriter(fileName);
             //serializer.Serialize(writer, this);
+            
             //string jsonString = JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
             //File.WriteAllText(fileName, jsonString);
+
             IFormatter formatter = new BinaryFormatter();
             using Stream stream = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
             formatter.Serialize(stream, this);
@@ -151,8 +156,12 @@ namespace TaskScheduler
             //XmlSerializer serializer = new XmlSerializer(typeof(MyTask));
             //using FileStream stream = new FileStream(fileName, FileMode.Open);
             //return (MyTask)serializer.Deserialize(stream);
+
+
             //string jsonString = File.ReadAllText(fileName);
             //return JsonSerializer.Deserialize<MyTask>(jsonString);
+
+
             IFormatter formatter = new BinaryFormatter();
             using Stream stream = new FileStream(fileName, FileMode.Open);
             return (MyTask)formatter.Deserialize(stream);

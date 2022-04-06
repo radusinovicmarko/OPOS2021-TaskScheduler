@@ -5,7 +5,15 @@ using TaskScheduler;
 
 //var task2 = EdgeDetectionTask.Deserialize("EdgeDetectionTask_637842439470068271.bin");
 //foreach (var v in task2.ResourcesProcessed) Console.WriteLine(v);
-//return;
+
+
+/*MyTask t = new EdgeDetectionTask(new DateTime(2023, 2, 22, 0, 0, 0), 20000, 1, new ControlToken(), new ControlToken(), MyTask.TaskPriority.Normal, new FileResource("C:\\Users\\User20\\Desktop\\test2.jfif"));
+
+t.Serialize();
+Console.WriteLine(Type.GetType(t.GetType().AssemblyQualifiedName).GetMethod("Deserialize"));
+Type.GetType(t.GetType().AssemblyQualifiedName).GetMethod("Deserialize").Invoke(null, new object[]{""});
+
+return;*/
 
 TaskScheduler.TaskScheduler scheduler = new TaskScheduler.TaskScheduler(1, 10);
 new Thread(() =>
@@ -50,8 +58,9 @@ ControlToken? userToken2 = new();
      }
  }, new DateTime(2023, 2, 22, 0, 0, 0), 50, 3, token2, MyTask.TaskPriority.High));*/
 scheduler.AddTask(new EdgeDetectionTask(new DateTime(2023, 2, 22, 0, 0, 0), 20000, 1, token2, userToken2, MyTask.TaskPriority.Normal, new FileResource("C:\\Users\\User20\\Desktop\\test2.jfif")/*, new Resource("C:\\Users\\User20\\Desktop\\test2.jfif"), new Resource("C:\\Users\\User20\\Desktop\\test3.png")*/));
-//MyTask task = new EdgeDetectionTask(new DateTime(2023, 2, 22, 0, 0, 0), 20000, 1, token2, MyTask.TaskPriority.High, new FileResource("C:\\Users\\User20\\Desktop\\test2.jfif"), new FileResource("C:\\Users\\User20\\Desktop\\test2.jfif"), new FileResource("C:\\Users\\User20\\Desktop\\test3.png"));
-//scheduler.AddTask(task);
+//MyTask task = new EdgeDetectionTask(new DateTime(2023, 2, 22, 0, 0, 0), 20000, 1, token2, userToken2, MyTask.TaskPriority.High, new FileResource("C:\\Users\\User20\\Desktop\\test2.jfif"), new FileResource("C:\\Users\\User20\\Desktop\\test2.jfif"), new FileResource("C:\\Users\\User20\\Desktop\\test3.png"));
+MyTask task = (MyTask) Type.GetType("TaskScheduler.EdgeDetectionTask, TaskScheduler, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null").GetMethod("Deserialize").Invoke(null, new object[] { "TaskScheduler.EdgeDetectionTask, TaskScheduler, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null_637848570192396706.bin" });
+scheduler.AddTask(task);
 scheduler.Start();
 Thread.Sleep(4000);
 //task.Serialize();
@@ -71,7 +80,7 @@ ControlToken? userToken3 = new();
         Thread.Sleep(1500);
     }
 }, new DateTime(2023, 2, 22, 0, 0, 0), 20, 1, token3, MyTask.TaskPriority.High));*/
-scheduler.AddTask(new EdgeDetectionTask(new DateTime(2023, 2, 22, 0, 0, 0), 2000, 1, token3, userToken3, MyTask.TaskPriority.High, new FileResource("C:\\Users\\User20\\Desktop\\test.jpg"), new FileResource("C:\\Users\\User20\\Desktop\\test2.jfif")/*, new Resource("C:\\Users\\User20\\Desktop\\test3.png")*/));
+//scheduler.AddTask(new EdgeDetectionTask(new DateTime(2023, 2, 22, 0, 0, 0), 2000, 1, token3, userToken3, MyTask.TaskPriority.High, new FileResource("C:\\Users\\User20\\Desktop\\test.jpg"), new FileResource("C:\\Users\\User20\\Desktop\\test2.jfif")/*, new Resource("C:\\Users\\User20\\Desktop\\test3.png")*/));
 Console.WriteLine("Hello, World!");
 ControlToken? token4 = new();
 ControlToken? userToken4 = new();
