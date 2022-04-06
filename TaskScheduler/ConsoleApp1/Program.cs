@@ -80,7 +80,7 @@ ControlToken? userToken3 = new();
         Thread.Sleep(1500);
     }
 }, new DateTime(2023, 2, 22, 0, 0, 0), 20, 1, token3, MyTask.TaskPriority.High));*/
-//scheduler.AddTask(new EdgeDetectionTask(new DateTime(2023, 2, 22, 0, 0, 0), 2000, 1, token3, userToken3, MyTask.TaskPriority.High, new FileResource("C:\\Users\\User20\\Desktop\\test.jpg"), new FileResource("C:\\Users\\User20\\Desktop\\test2.jfif")/*, new Resource("C:\\Users\\User20\\Desktop\\test3.png")*/));
+scheduler.AddTask(new EdgeDetectionTask(new DateTime(2023, 2, 22, 0, 0, 0), 2000, 1, token3, userToken3, MyTask.TaskPriority.High, new FileResource("C:\\Users\\User20\\Desktop\\test.jpg"), new FileResource("C:\\Users\\User20\\Desktop\\test2.jfif")/*, new Resource("C:\\Users\\User20\\Desktop\\test3.png")*/));
 Console.WriteLine("Hello, World!");
 ControlToken? token4 = new();
 ControlToken? userToken4 = new();

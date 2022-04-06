@@ -58,7 +58,7 @@ namespace TaskScheduler
         {
             if (_resources != null)
                 foreach (Resource r in _resources)
-                    r.Lock();
+                    r.Lock(this);
             Action.Invoke();
             if (_resources != null)
                 foreach (Resource r in _resources)

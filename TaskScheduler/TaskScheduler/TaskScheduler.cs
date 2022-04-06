@@ -20,6 +20,8 @@ namespace TaskScheduler
 
         private Dictionary<MyTask, List<Resource>> _resourcesTaken = new Dictionary<MyTask, List<Resource>>();
 
+        private HashSet<Resource> _resourcesTaken2 = new HashSet<Resource>();
+
         private List<int> _coresTakenByRunningTasks = new List<int>();
 
         private object _lock = new object();
@@ -97,7 +99,7 @@ namespace TaskScheduler
                                 }
                             }
                             var pair = ResourcesFree(nextTask);
-                            if (lowestPriorityTask != null && lowestPriorityTask.Priority > nextTask.Priority && pair.Item1)
+                            if (lowestPriorityTask != null && lowestPriorityTask.Priority > nextTask.Priority && pair.Item1)// || !pair.Item1 && pair.Item2 == nextTask))
                             {
                                 lowestPriorityTask.ControlToken?.Pause();
                                 lowestPriorityTask.State = MyTask.TaskState.Paused;
@@ -137,6 +139,7 @@ namespace TaskScheduler
                                 continue;
                             }
                         }
+                        //var pair = ResourcesFree(nextTask);
                         if (!ResourcesFree(nextTask).Item1)
                         {
                             Monitor.Wait(_lock);
@@ -161,7 +164,20 @@ namespace TaskScheduler
                             _scheduledTasks.Dequeue();
                             _stopwatches.Add(nextTask, Stopwatch.StartNew());
                             if (nextTask.Resources != null)
+                            {
                                 _resourcesTaken.Add(nextTask, nextTask.Resources);
+                                //_resourcesTaken2.Union(nextTask.Resources);
+                                for (int i = 0; i < nextTask.Resources.Count; i++)
+                                {
+                                    if (_resourcesTaken2.Contains(nextTask.Resources[i]))
+                                    {
+                                        _resourcesTaken2.TryGetValue(nextTask.Resources[i], out Resource? res);
+                                        nextTask.Resources[i] = res;
+                                    }
+                                    else
+                                        _resourcesTaken2.Add(nextTask.Resources[i]);
+                                }
+                            }
                             // ThreadPool ? 
                             new Thread(() =>
                             {
@@ -190,8 +206,12 @@ namespace TaskScheduler
             new Thread(CancelTasks) { IsBackground = true }.Start();
         }
 
+        //TODO
+        //DOES NOT WORK WITH SERIALIZATION
+
         private (bool, MyTask?) ResourcesFree(MyTask nextTask)
         {
+            /*
             if (nextTask.Resources != null)
                 foreach (Resource nextTaskResource in nextTask.Resources)
                 {
@@ -203,6 +223,16 @@ namespace TaskScheduler
                                     return (false, task);
                     }
                 }
+            return (true, null);*/
+            if (nextTask.Resources != null)
+                foreach (var resource in nextTask.Resources)
+                    if (_resourcesTaken2.Contains(resource))
+                    {
+                        Resource r;
+                        _resourcesTaken2.TryGetValue(resource, out r);
+                        if (r.Locked && r.Task != nextTask)
+                            return (false, r.Task);
+                    }        
             return (true, null);
         }
 
