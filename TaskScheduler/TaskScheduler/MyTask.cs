@@ -41,7 +41,8 @@ namespace TaskScheduler
         protected int _maxDegreeOfParalellism;
         protected bool _terminated = false;
         protected readonly ControlToken? _controlToken;
-        protected readonly TaskPriority _priority;
+        protected readonly ControlToken? _userControlToken;
+        protected TaskPriority _priority;
         //ReadWriteLock
         protected List<Resource>? _resources = null;
 
@@ -55,7 +56,9 @@ namespace TaskScheduler
 
         public ControlToken? ControlToken => _controlToken;
 
-        public TaskPriority Priority => _priority;
+        public ControlToken? UserControlToken => _userControlToken;
+
+        public TaskPriority Priority { get { return _priority; } set { _priority = value; } }
 
         public DateTime Deadline => _deadline;
 
@@ -78,7 +81,7 @@ namespace TaskScheduler
             //_resourcesProcessed = new List<bool>();
         }
 
-        public MyTask(Action action, DateTime deadline, double maxExecTime, int maxDegreeOfParalellism = 1, ControlToken? token = null, TaskPriority priority = TaskPriority.Normal)
+        public MyTask(Action action, DateTime deadline, double maxExecTime, int maxDegreeOfParalellism = 1, ControlToken? token = null, ControlToken? userToken = null, TaskPriority priority = TaskPriority.Normal)
         {
             _state = TaskState.Ready;
             _action = action;
@@ -87,6 +90,7 @@ namespace TaskScheduler
             _maxDegreeOfParalellism = maxDegreeOfParalellism;
             _priority = priority;
             _controlToken = token;
+            _userControlToken = userToken;
         }
 
         public MyTask(Action action, DateTime deadline, double maxExecTime, int maxDegreeOfParalellism = 1, TaskPriority priority = TaskPriority.Normal)
@@ -98,9 +102,10 @@ namespace TaskScheduler
             _maxDegreeOfParalellism = maxDegreeOfParalellism;
             _priority = priority;
             _controlToken = null;
+            _userControlToken = null;
         }
 
-        public MyTask(Action action, DateTime deadline, double maxExecTime, int maxDegreeOfParalellism, ControlToken? token, TaskPriority priority, params Resource[] resources)
+        public MyTask(Action action, DateTime deadline, double maxExecTime, int maxDegreeOfParalellism, ControlToken? token, ControlToken? userToken, TaskPriority priority, params Resource[] resources)
         {
             _state = TaskState.Ready;
             _action = action;
@@ -109,6 +114,7 @@ namespace TaskScheduler
             _maxDegreeOfParalellism = maxDegreeOfParalellism;
             _priority = priority;
             _controlToken = token;
+            _userControlToken = userToken;
             _resources = new List<Resource>();
             _resources.AddRange(resources.ToArray());
             _resourcesProcessed = new List<bool>();
@@ -118,7 +124,13 @@ namespace TaskScheduler
 
         public virtual void Execute()
         {
+            if (_resources != null)
+                foreach (Resource r in _resources)
+                    r.Lock();
             Action();
+            if (_resources != null)
+                foreach (Resource r in _resources)
+                    r.Unlock();
         }
 
         public virtual void Serialize()

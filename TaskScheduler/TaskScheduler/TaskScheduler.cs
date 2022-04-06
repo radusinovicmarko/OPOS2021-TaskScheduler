@@ -2,10 +2,6 @@
 
 namespace TaskScheduler
 {
-
-    //TODO
-    //Prevencija -> promjena coresTaken, vodjenje racuna o broju zauzetih jezgara za svaki zadatak
-
     public class TaskScheduler
     {
         private readonly int _maxNumberOfCores;
@@ -21,6 +17,8 @@ namespace TaskScheduler
         private Dictionary<MyTask, int> _runningTasks2 = new Dictionary<MyTask, int>();
 
         private Dictionary<MyTask, Stopwatch> _stopwatches = new Dictionary<MyTask, Stopwatch>();
+
+        private Dictionary<MyTask, List<Resource>> _resourcesTaken = new Dictionary<MyTask, List<Resource>>();
 
         private List<int> _coresTakenByRunningTasks = new List<int>();
 
@@ -55,55 +53,13 @@ namespace TaskScheduler
         }
 
         //Adding tasks when maxNoOfConc. > maxNoOfCores
-        //State = Ready when adding task of higher priority then one in the queue
+        //State = Ready when adding task of higher priority than one in the queue
 
         public void AddTask(MyTask myTask)
         {
             int maxNumberOfTasks = Math.Min(_maxNumberOfConcurrentTasks, _maxNumberOfCores);
             lock (_lock)
             {
-                //if (_runningTasks.Count(task => task != null) >= maxNumberOfTasks)
-                /*if (_coresTaken == MaxNumberOfCores)
-                {
-                    int index = 0;
-                    MyTask? minPriorityTask = null;
-                    for (; index < _runningTasks.Count; index++)
-                        if (_runningTasks[index] != null)
-                        {
-                            minPriorityTask = _runningTasks[index];
-                            break;
-                        }
-                    for (int i = index + 1; i < _runningTasks.Count; i++)
-                        if (_runningTasks.ElementAt(i) != null && _runningTasks.ElementAt(i).Priority > minPriorityTask?.Priority)
-                        {
-                            minPriorityTask = _runningTasks.ElementAt(i);
-                            index = i;
-                        }
-                    if (minPriorityTask?.Priority > myTask.Priority)
-                    {
-                        minPriorityTask.ControlToken?.Pause();
-                        minPriorityTask.State = MyTask.TaskState.Paused;
-                        _coresTaken -= _coresTakenByRunningTasks[index];
-                        _scheduledTasks.Enqueue(minPriorityTask, minPriorityTask.Priority);
-                        Thread t = new Thread(() => ThreadCoreExecution(index));
-                        myTask.State = MyTask.TaskState.Ready;
-                        _scheduledTasks.Enqueue(myTask, myTask.Priority);
-                        t.Start();
-                        Monitor.PulseAll(_lock);
-                        return;
-                    }
-                }*/
-                //if (_scheduledTasks.Count < maxNumberOfTasks)
-                  //  myTask.State = MyTask.TaskState.Ready;
-                /*int counter = 0;
-                foreach (var task in _scheduledTasks.UnorderedItems)
-                {
-                    if (counter < maxNumberOfTasks)
-                        task.Element.State = MyTask.TaskState.Ready;
-                    else
-                        task.Element.State = MyTask.TaskState.Created;
-                    counter++;
-                }*/
                 _scheduledTasks.Enqueue(myTask, myTask.Priority);
                 Monitor.PulseAll(_lock);
             }
@@ -114,13 +70,6 @@ namespace TaskScheduler
             if (_started)
                 return;
             _started = true;
-            /*for (int i = 0; i < _maxNumberOfCores; i++)
-            {
-                int iCopy = i;
-                Thread t = new Thread(() => ThreadCoreExecution(iCopy));
-                t.IsBackground = true;
-                t.Start();
-            }*/
             new Thread(() =>
             {
                 while (true)
@@ -147,9 +96,9 @@ namespace TaskScheduler
                                     lowestPriorityTask = task;
                                 }
                             }
-                            if (lowestPriorityTask != null && lowestPriorityTask.Priority > nextTask.Priority)
+                            var pair = ResourcesFree(nextTask);
+                            if (lowestPriorityTask != null && lowestPriorityTask.Priority > nextTask.Priority && pair.Item1)
                             {
-                                //_scheduledTasks.Dequeue();
                                 lowestPriorityTask.ControlToken?.Pause();
                                 lowestPriorityTask.State = MyTask.TaskState.Paused;
                                 _stopwatches.TryGetValue(lowestPriorityTask, out Stopwatch? watch);
@@ -158,34 +107,40 @@ namespace TaskScheduler
                                 _coresTaken -= cores;
                                 numberOfFreeCores = MaxNumberOfCores - _coresTaken;
                                 _runningTasks2.Remove(lowestPriorityTask);
-                                _scheduledTasks.Enqueue(lowestPriorityTask, lowestPriorityTask.Priority);
-                                /*if (nextTask.MaxDegreeOfParalellism > numberOfFreeCores)
-                                    coresToBeTaken = numberOfFreeCores;
-                                else
-                                    coresToBeTaken = nextTask.MaxDegreeOfParalellism;
-                                _coresTaken += coresToBeTaken;
-                                //MyTask taskCopy = nextTask;
-                                new Thread(() =>
+                                _scheduledTasks.Enqueue(lowestPriorityTask, lowestPriorityTask.Priority);                            
+                            }
+                            // PIP
+                            else if (lowestPriorityTask != null && lowestPriorityTask.Priority > nextTask.Priority && !pair.Item1 && pair.Item2?.State == MyTask.TaskState.Paused) 
+                            {
+
+                                //_scheduledTasks.Dequeue();
+                                pair.Item2.Priority = nextTask.Priority;
+                                var collection = _scheduledTasks.UnorderedItems;
+                                PriorityQueue<MyTask, MyTask.TaskPriority> newQueue = new();
+                                newQueue.Enqueue(pair.Item2, pair.Item2.Priority);
+                                foreach (var item in collection)
+                                    if (item.Element != pair.Item2)
+                                        newQueue.Enqueue(item.Element, item.Element.Priority);
+                                /*while (_scheduledTasks.Count > 0)
                                 {
-                                    nextTask.Execute();
-                                    nextTask.Terminated = true;
-                                    lock (_lock)
-                                    {
-                                        _coresTaken -= coresToBeTaken;
-                                        if (_scheduledTasks.Count > 0 && _scheduledTasks.Peek().State != MyTask.TaskState.Paused)
-                                            _scheduledTasks.Peek().State = MyTask.TaskState.Ready;
-                                        Monitor.PulseAll(_lock);
-                                    }
-                                })
-                                { IsBackground = true }.Start();
-                                _runningTasks2.Add(nextTask, coresToBeTaken);
-                                continue;*/                            
+                                    var item = _scheduledTasks.Dequeue();
+                                    if (item != pair.Item2)
+                                        _scheduledTasks.Enqueue(item, item.Priority);
+                                }*/
+                                //_scheduledTasks.Enqueue(nextTask, nextTask.Priority);
+                                _scheduledTasks = newQueue;
+                                continue;
                             }
                             else
                             {
                                 Monitor.Wait(_lock);
                                 continue;
                             }
+                        }
+                        if (!ResourcesFree(nextTask).Item1)
+                        {
+                            Monitor.Wait(_lock);
+                            continue;
                         }
                         if (nextTask.MaxDegreeOfParalellism > numberOfFreeCores)
                             coresToBeTaken = numberOfFreeCores;
@@ -205,13 +160,17 @@ namespace TaskScheduler
                             _coresTaken += coresToBeTaken;
                             _scheduledTasks.Dequeue();
                             _stopwatches.Add(nextTask, Stopwatch.StartNew());
-                            //MyTask taskCopy = nextTask;
+                            if (nextTask.Resources != null)
+                                _resourcesTaken.Add(nextTask, nextTask.Resources);
+                            // ThreadPool ? 
                             new Thread(() =>
                             {
                                 nextTask.Execute();
                                 nextTask.Terminated = true;
                                 lock (_lock)
                                 {
+                                    _resourcesTaken.Remove(nextTask);
+                                    _runningTasks2.Remove(nextTask);
                                     _coresTaken -= coresToBeTaken;
                                     if (_scheduledTasks.Count > 0 && _scheduledTasks.Peek().State != MyTask.TaskState.Paused)
                                         _scheduledTasks.Peek().State = MyTask.TaskState.Ready;
@@ -224,27 +183,27 @@ namespace TaskScheduler
                         else
                             continue;
                         _runningTasks2.Add(nextTask, coresToBeTaken);
-                        //Thread cancelTaskThread = new Thread(() => CancelTask(nextTask));
-                        //cancelTaskThread.Start();
-                        /*lock (_lock)
-                        {
-                            _runningTasks[i] = nextTask;
-                            _coresTakenByRunningTasks[i] = coresToBeTaken;
-                        }
-                        nextTask.Execute();
-                        nextTask.Terminated = true;
-                        lock (_lock)
-                        {
-                            _coresTaken -= coresToBeTaken;
-                            if (_scheduledTasks.Count > 0 && _scheduledTasks.Peek().State != MyTask.TaskState.Paused)
-                                _scheduledTasks.Peek().State = MyTask.TaskState.Ready;
-                            Monitor.PulseAll(_lock);
-                        }*/
                     }
                 }
             })
             { IsBackground = true }.Start();
             new Thread(CancelTasks) { IsBackground = true }.Start();
+        }
+
+        private (bool, MyTask?) ResourcesFree(MyTask nextTask)
+        {
+            if (nextTask.Resources != null)
+                foreach (Resource nextTaskResource in nextTask.Resources)
+                {
+                    foreach (MyTask task in _resourcesTaken.Keys)
+                    {
+                        if (task != nextTask)
+                            foreach (Resource r in task.Resources)
+                                if (nextTaskResource.Equals(r))
+                                    return (false, task);
+                    }
+                }
+            return (true, null);
         }
 
         private static void CancelTask(MyTask task)

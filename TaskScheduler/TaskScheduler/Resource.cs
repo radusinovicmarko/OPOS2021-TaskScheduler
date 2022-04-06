@@ -10,12 +10,29 @@ namespace TaskScheduler
     public class Resource
     {
         protected bool _locked = false;
-        protected readonly object _lock = new();
 
         public Resource() { }
 
-        public object Lock => _lock;
+        public void Lock()
+        {
+            _locked = true;
+        }
 
-        public bool Locked { get { return _locked; } set { _locked = value; } }
+        public void Unlock()
+        {
+            Locked = false;
+        }
+
+        public bool Locked { get { return _locked; } private set { _locked = value; } }
+
+        public override bool Equals(object? obj)
+        {
+            return base.Equals(obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
     }
 }

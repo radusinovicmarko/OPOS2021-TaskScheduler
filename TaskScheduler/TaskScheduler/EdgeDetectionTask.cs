@@ -15,7 +15,7 @@ namespace TaskScheduler
     public class EdgeDetectionTask : MyTask
     {
 
-        private static int[,] edgeDetectionKernel = new int[,] { { 0, -1, 0 }, { -1, 4, -1 }, { 0, -1, 0 } };
+        private static readonly int[,] edgeDetectionKernel = new int[,] { { 0, -1, 0 }, { -1, 4, -1 }, { 0, -1, 0 } };
 
         private int noRows = 0;
 
@@ -24,8 +24,8 @@ namespace TaskScheduler
             Action = this.EdgeDetection;
         }
 
-        public EdgeDetectionTask(DateTime deadline, double maxExecTime, int maxDegreeOfParalellism, ControlToken? token, TaskPriority priority, params Resource[] resources) 
-            : base(null, deadline, maxExecTime, maxDegreeOfParalellism, token, priority, resources)
+        public EdgeDetectionTask(DateTime deadline, double maxExecTime, int maxDegreeOfParalellism, ControlToken? token, ControlToken? userToken, TaskPriority priority, params Resource[] resources) 
+            : base(null, deadline, maxExecTime, maxDegreeOfParalellism, token, userToken, priority, resources)
         {
             if (resources.Length == 0)
                 throw new ArgumentException("At least one resource image must be specified.");
@@ -47,7 +47,7 @@ namespace TaskScheduler
                      if (!_resourcesProcessed[i])
                      {
                          Bitmap? newImage = EdgeDetectionAlgorithm((Bitmap)Bitmap.FromFile(((FileResource)_resources.ElementAt(i)).Path), 1);
-                         newImage?.Save("test" + (i*10000 + 50) + ".jfif");
+                         newImage?.Save("test" + (i*100 + 50) + ".jfif");
                          _resourcesProcessed[i] = true;
                      }
                  });
@@ -56,7 +56,13 @@ namespace TaskScheduler
 
         public override void Execute()
         {
+            if (_resources != null)
+                foreach (Resource r in _resources)
+                    r.Lock();
             Action.Invoke();
+            if (_resources != null)
+                foreach (Resource r in _resources)
+                    r.Unlock();
         }
 
         private Bitmap? EdgeDetectionAlgorithm(Bitmap clone, int degree)
@@ -67,12 +73,17 @@ namespace TaskScheduler
             Parallel.For(0, clone.Height - 2, new ParallelOptions { MaxDegreeOfParallelism = degree }, i =>
             {
                 //Check for Pause/Terminate
-                if (_controlToken != null && _controlToken.Terminated)
+                if ((_controlToken != null && _controlToken.Terminated) || (_userControlToken != null && _userControlToken.Terminated)) 
                     return;
                 if (_controlToken != null && _controlToken.Paused)
                 {
                     lock (_controlToken.Lock)
                         Monitor.Wait(_controlToken.Lock);
+                }
+                if (_userControlToken != null && _userControlToken.Paused)
+                {
+                    lock (_userControlToken.Lock)
+                        Monitor.Wait(_userControlToken.Lock);
                 }
                 Color[,] pixelColor = new Color[3, 3];
                 int y = i;

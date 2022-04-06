@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace TaskScheduler
 {
+    [Serializable]
     public class FileResource : Resource
     {
         private readonly string _path;
@@ -16,5 +17,21 @@ namespace TaskScheduler
         }
 
         public String Path => _path;
+
+        public override bool Equals(object? obj)
+        {
+            if (obj == null) 
+                return false;
+            if (ReferenceEquals(this, obj))
+                return true;
+            if (obj is not FileResource)
+                return false;
+            return ((FileResource)obj)._path == _path;
+        }
+
+        public override int GetHashCode()
+        {
+            return _path.GetHashCode();
+        }
     }
 }
