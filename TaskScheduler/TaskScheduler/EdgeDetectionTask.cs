@@ -19,6 +19,8 @@ namespace TaskScheduler
 
         private int noRows = 0;
 
+        private int maxHeight = 0;
+
         public EdgeDetectionTask() 
         {
             Action = this.EdgeDetection;
@@ -36,12 +38,16 @@ namespace TaskScheduler
         {
             if (_resources.Count == 1)
             {
-                Bitmap? newImage = EdgeDetectionAlgorithm((Bitmap)Bitmap.FromFile(((FileResource)_resources.ElementAt(0)).Path), MaxDegreeOfParalellism);
+                Bitmap originalImage = (Bitmap)Bitmap.FromFile(((FileResource)_resources.ElementAt(0)).Path);
+                maxHeight = originalImage.Height;
+                Bitmap? newImage = EdgeDetectionAlgorithm(originalImage, MaxDegreeOfParalellism);
                 newImage?.Save("test" + new Random().Next() + ".jfif");
                 _resourcesProcessed[0] = true;
             }
             else
             {
+                foreach (var resource in _resources)
+                    maxHeight += ((Bitmap)Bitmap.FromFile(((FileResource)resource).Path)).Height;
                 Parallel.For(0, _resources.Count, new ParallelOptions { MaxDegreeOfParallelism = MaxDegreeOfParalellism }, i =>
                  {
                      if (!_resourcesProcessed[i])
@@ -63,6 +69,7 @@ namespace TaskScheduler
             if (_resources != null)
                 foreach (Resource r in _resources)
                     r.Unlock();
+            FinishedTaskCallback?.Invoke();
         }
 
         private Bitmap? EdgeDetectionAlgorithm(Bitmap clone, int degree)
@@ -146,10 +153,10 @@ namespace TaskScheduler
                 lock (this)
                 {
                     noRows++;
-                    Progress = (double)noRows / b.Height;
+                    _progress = (double)noRows / maxHeight;
                 }
-                if (Action2 != null)
-                    Action2.Invoke();
+                if (_progressBarUpdateAction != null)
+                    _progressBarUpdateAction.Invoke();
             });
             
             return ControlToken != null ? ControlToken.Terminated ? null : newImg : newImg;

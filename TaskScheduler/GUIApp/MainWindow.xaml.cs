@@ -26,8 +26,7 @@ namespace GUIApp
     public partial class MainWindow : Window
     {
         private StackPanel tasksStackPanel;
-        private Dictionary<string, Func<MyTask>> taskTypes = new();
-        private DateTimePicker deadlineDTP = new DateTimePicker() { Width = 150 };
+        private Dictionary<string, Action> taskTypes = new();
         private List<MyTask> tasks = new List<MyTask>();
         private TaskScheduler.TaskScheduler scheduler;
         private bool priorityScheduling, preemptiveScheduling;
@@ -37,21 +36,19 @@ namespace GUIApp
         public MainWindow(int cores, int concTasks, bool priority, bool preemptive)
         {
             InitializeComponent();
-            scheduler = new TaskScheduler.TaskScheduler(cores, concTasks);
             priorityScheduling = priority;
-            preemptiveScheduling = preemptive; 
-            Application.Current.ShutdownMode = ShutdownMode.OnLastWindowClose;
+            preemptiveScheduling = preemptive;
+            scheduler = new TaskScheduler.TaskScheduler(cores, concTasks, preemptiveScheduling);
+            //Application.Current.ShutdownMode = ShutdownMode.OnLastWindowClose;
             tasksStackPanel = tasksSP;
-            taskTypes.Add("Edge Detection Task", CreateEdgeDetectionTask);
-            ResizeMode = ResizeMode.CanMinimize;
-            deadlineSP.Children.Add(deadlineDTP);
-            taskTypeCB.ItemsSource = taskTypes.Keys;
-            priorityCB.ItemsSource = Enum.GetValues(typeof(MyTask.TaskPriority));
-            if (!priorityScheduling)
+            taskTypes.Add("Edge Detection Task", () =>
             {
-                priorityCB.SelectedItem = MyTask.TaskPriority.Normal;
-                priorityCB.IsEnabled = false;
-            }
+                EdgeDetectionTaskWindow win = new EdgeDetectionTaskWindow(priorityScheduling, preemptiveScheduling);
+                if (win.ShowDialog() == false)
+                    AddTaskToStackPanel(win.Task);
+            });
+            ResizeMode = ResizeMode.CanMinimize;
+            taskTypeCB.ItemsSource = taskTypes.Keys;
             scheduler.Start();
             /*new Thread(() =>
             {
@@ -69,7 +66,7 @@ namespace GUIApp
             throw new NotImplementedException();
         }
 
-        private EdgeDetectionTask CreateEdgeDetectionTask()
+       /* private EdgeDetectionTask CreateEdgeDetectionTask()
         {
             if (!Int32.TryParse(maxExecTimeTB.Text, out int maxExecTime))
                 System.Windows.MessageBox.Show("...");
@@ -83,52 +80,32 @@ namespace GUIApp
                 resources.Add(new FileResource(item));
             ControlToken? controlToken = preemptiveScheduling ? new() : null;
             return new EdgeDetectionTask((DateTime)deadlineDTP.Value, maxExecTime, maxDegreeOfParallelism, controlToken, new ControlToken(), priority, resources.ToArray());
-        }
-
-        private void taskTypeCB_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (!taskTypes.TryGetValue(taskTypeCB.SelectedItem.ToString(), out Func<MyTask>? action))
-                action?.Invoke();
-        }
-
-        private void addResourceBtn_Click(object sender, RoutedEventArgs e)
-        {
-            OpenFileDialog fileDialog = new OpenFileDialog();
-            if (fileDialog.ShowDialog() == true)
-                resourcesLB.Items.Add(fileDialog.FileName);
-        }
-
-        private void addTaskBtn_Click(object sender, RoutedEventArgs e)
-        {
-            MyTask task = null;
-            if (taskTypes.TryGetValue(taskTypeCB.SelectedItem.ToString(), out Func<MyTask>? func))
-                task = func.Invoke();
-            if (task != null)
-            {
-                tasks.Add(task);
-                //scheduler.AddTask(task);
-                AddTaskToStackPanel(task);
-                //scheduler.AddTask(task);
-                resourcesLB.Items.Clear();
-                //deadlineDTP.Value = null;
-                //maxExecTimeTB.Clear();
-                //maxDegreeOfParallelismTB.Clear();
-            }
-        }
+        }*/
 
         private void AddTaskToStackPanel(MyTask task)
         {
+            if (task == null)
+            {
+                System.Windows.MessageBox.Show("Task settings not correctly specified.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
             StackPanel stackPanel = new StackPanel() { Orientation = Orientation.Horizontal };
             stackPanel.Children.Add(new Label() { Content = task.ToString() });
-            ProgressBar pb = new ProgressBar() { Orientation = Orientation.Horizontal, Width = 150, Margin = new Thickness(5, 0, 0, 0), Maximum = 1.0 };
+
+            Button removeBtn = new Button() { Content = "Remove", Margin = new Thickness(15, 0, 0, 0), IsEnabled = true, Width = 50 };
+            removeBtn.Click += new RoutedEventHandler((sender, e) => tasksStackPanel.Children.Remove(stackPanel));
+
+            task.FinishedTaskCallback = () => this.Dispatcher.Invoke(() => removeBtn.IsEnabled = true);
+
+            ProgressBar pb = new ProgressBar() { Orientation = Orientation.Horizontal, Width = 175, Margin = new Thickness(5, 0, 0, 0), Maximum = 1.0 };
             stackPanel.Children.Add(pb);
-            task.Action2 = () =>
+            task.ProgressBarUpdateAction = () =>
             {
                 this.Dispatcher.Invoke(() => pb.Value = task.Progress);
             };
-            Button removeBtn = new Button() { Content = "Remove", Margin = new Thickness(15, 0, 0, 0), IsEnabled = false };
-            removeBtn.Click += new RoutedEventHandler((sender, e) => task.UserControlToken?.Pause());
-            Button startBtn = new Button() { Content = "Start", Margin = new Thickness(5, 0, 0, 0) };
+
+            Button startBtn = new Button() { Content = "Start", Margin = new Thickness(10, 0, 0, 0), Width = 50 };
             startBtn.Click += new RoutedEventHandler((sender, e) =>
             { 
                 scheduler.AddTask(task);
@@ -136,18 +113,34 @@ namespace GUIApp
                 removeBtn.IsEnabled = false;
             });
             stackPanel.Children.Add(startBtn);
-            Button pauseBtn = new Button() { Content = "Pause", Margin = new Thickness(15, 0, 0, 0) };
+
+            Button pauseBtn = new Button() { Content = "Pause", Margin = new Thickness(15, 0, 0, 0), Width = 50 };
             pauseBtn.Click += new RoutedEventHandler((sender, e) => task.UserControlToken?.Pause());
             stackPanel.Children.Add(pauseBtn);
-            Button resumeBtn = new Button() { Content = "Resume", Visibility = Visibility.Visible, Margin = new Thickness(5, 0, 0, 0) };
+
+            Button resumeBtn = new Button() { Content = "Resume", Visibility = Visibility.Visible, Margin = new Thickness(5, 0, 0, 0), Width = 50 };
             resumeBtn.Click += new RoutedEventHandler((sender, e) => task.UserControlToken?.Resume());
             stackPanel.Children.Add(resumeBtn);
-            Button cancelBtn = new Button() { Content = "Cancel", Margin = new Thickness(5, 0, 0, 0) };
+
+            Button cancelBtn = new Button() { Content = "Cancel", Margin = new Thickness(5, 0, 0, 0), Width = 50 };
             cancelBtn.Click += new RoutedEventHandler((sender, e) => task.UserControlToken?.Terminate());
-            //cancelBtn.Click += new RoutedEventHandler((sender, e) => task.Serialize("task.txt"));
             stackPanel.Children.Add(cancelBtn);
             stackPanel.Children.Add(removeBtn);
             tasksStackPanel.Children.Add(stackPanel);
+        }
+
+        private void addTaskBtn_Click(object sender, RoutedEventArgs e)
+        {
+            if (taskTypeCB.SelectedItem != null)
+            {
+                string taskType = taskTypeCB.SelectedItem.ToString();
+                if (taskTypes.TryGetValue(taskType, out Action? action))
+                    action?.Invoke();
+                else
+                    System.Windows.MessageBox.Show("...");
+            }
+            else
+                System.Windows.MessageBox.Show("...");
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)

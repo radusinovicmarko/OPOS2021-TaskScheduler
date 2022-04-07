@@ -7,6 +7,7 @@ namespace TaskScheduler
         private readonly int _maxNumberOfCores;
         private readonly int _maxNumberOfConcurrentTasks;
         private bool _started = false;
+        private bool _preemptiveScheduling;
 
         public int _coresTaken = 0;
 
@@ -40,6 +41,12 @@ namespace TaskScheduler
                 _coresTakenByRunningTasks.Add(0);
             }
             Process.GetCurrentProcess().ProcessorAffinity = getProcessorAffinity(maxNumberOfCores);
+        }
+
+        public TaskScheduler(int maxNumberOfCores, int maxNumberOfConcurrentTasks, bool preemptiveScheduling) 
+            : this(maxNumberOfCores, maxNumberOfConcurrentTasks)
+        {
+            _preemptiveScheduling = preemptiveScheduling;
         }
 
         private IntPtr getProcessorAffinity(int maxNumberOfCores)
@@ -99,7 +106,7 @@ namespace TaskScheduler
                                 }
                             }
                             var pair = ResourcesFree(nextTask);
-                            if (lowestPriorityTask != null && lowestPriorityTask.Priority > nextTask.Priority && pair.Item1)// || !pair.Item1 && pair.Item2 == nextTask))
+                            if (_preemptiveScheduling && lowestPriorityTask != null && lowestPriorityTask.Priority > nextTask.Priority && pair.Item1)// || !pair.Item1 && pair.Item2 == nextTask))
                             {
                                 lowestPriorityTask.ControlToken?.Pause();
                                 lowestPriorityTask.State = MyTask.TaskState.Paused;
@@ -112,7 +119,7 @@ namespace TaskScheduler
                                 _scheduledTasks.Enqueue(lowestPriorityTask, lowestPriorityTask.Priority);                            
                             }
                             // PIP
-                            else if (lowestPriorityTask != null && lowestPriorityTask.Priority > nextTask.Priority && !pair.Item1 && pair.Item2?.State == MyTask.TaskState.Paused) 
+                            else if (_preemptiveScheduling && lowestPriorityTask != null && lowestPriorityTask.Priority > nextTask.Priority && !pair.Item1 && pair.Item2?.State == MyTask.TaskState.Paused) 
                             {
 
                                 //_scheduledTasks.Dequeue();

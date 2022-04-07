@@ -1,0 +1,43 @@
+﻿<Window x:Class="GUIApp.EdgeDetectionTaskWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:GUIApp"
+        mc:Ignorable="d"
+        WindowStartupLocation="CenterScreen"
+        Topmost="True"
+        Title="EdgeDetectionTaskWindow" Height="410" Width="500">
+    <Grid>
+        <StackPanel x:Name="mainSP" Orientation="Vertical" Height="380">
+            <StackPanel Orientation="Horizontal" Height="35">
+                <Label Content="Edge Detection Task Settings" Margin="175 5 5 5"/>
+            </StackPanel>
+            <StackPanel x:Name="deadlineSP" Height="35" Orientation="Horizontal">
+                <Label Content="Deadline" Width="200"/>
+            </StackPanel>
+            <StackPanel Height="35" Orientation="Horizontal" Margin="0 5 0 0">
+                <Label Content="Maximum execution time [s]: " Width="200"/>
+                <TextBox x:Name="maxExecTimeTB"  Width="250" Margin="5 5 5 5"/>
+            </StackPanel>
+            <StackPanel Height="35" Orientation="Horizontal" Margin="0 5 0 0">
+                <Label Content="Maximum degree of parallelism: " Width="200"/>
+                <TextBox x:Name="maxDegreeOfParallelismTB"  Width="250" Margin="5 5 5 5"/>
+            </StackPanel>
+            <StackPanel Height="35" Orientation="Horizontal" Margin="0 5 0 0">
+                <Label Content="Task priority: " Width="200"/>
+                <ComboBox x:Name="priorityCB"  Width="250" Margin="5 5 5 5"/>
+            </StackPanel>
+            <StackPanel Height="130" Orientation="Vertical" Margin="0 5 0 0">
+                <StackPanel Height="35" Orientation="Horizontal" Margin="0 5 0 0">
+                    <Label Content="Resources: " Width="200"/>
+                    <Button x:Name="addResourceBtn" Content="Add Resource" Width="150" Margin="5 5 5 5" Click="addResourceBtn_Click"/>
+                </StackPanel>
+                <ListBox x:Name="resourcesLB" Height="82" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="5 5 5 5"/>
+            </StackPanel>
+            <StackPanel Height="35" Orientation="Vertical" Margin="0 10 0 5">
+                <Button x:Name="addTaskBtn" HorizontalAlignment="Center" Content="Add Task" Width="120" Margin="5 5 5 5" Height="22" Click="AddTaskBtn_Click"/>
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</Window>

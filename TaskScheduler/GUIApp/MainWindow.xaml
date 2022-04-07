@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         WindowStartupLocation="CenterScreen"
-        Title="Task Scheduler App" Height="650" Width="600" Closing="Window_Closing">
+        Title="Task Scheduler App" Height="400" Width="710" Closing="Window_Closing">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="101*"/>
@@ -13,37 +13,13 @@
         </Grid.ColumnDefinitions>
         <StackPanel Grid.ColumnSpan="2">
             <StackPanel Height="35" Orientation="Horizontal" Margin="5 5 5 5">
-                <Label Content="Choose the task type" Margin="5 5 5 5"/>
-                <ComboBox x:Name="taskTypeCB" Width="300" Height="25" Margin="5 5 5 5" IsReadOnly="True"/>
-            </StackPanel>
-            <StackPanel x:Name="addTaskSP" Height="335" Orientation="Vertical" Margin="5 5 5 5">
-                <StackPanel x:Name="deadlineSP" Height="35" Orientation="Horizontal">
-                    <Label Content="Deadline" Width="200"/>
-                </StackPanel>
-                <StackPanel Height="35" Orientation="Horizontal" Margin="0 5 0 0">
-                    <Label Content="Maximum execution time [s]: " Width="200"/>
-                    <TextBox x:Name="maxExecTimeTB"  Width="150" Margin="0 5 5 5"/>
-                </StackPanel>
-                <StackPanel Height="35" Orientation="Horizontal" Margin="0 5 0 0">
-                    <Label Content="Maximum degree of parallelism: " Width="200"/>
-                    <TextBox x:Name="maxDegreeOfParallelismTB"  Width="150" Margin="0 5 5 5"/>
-                </StackPanel>
-                <StackPanel Height="35" Orientation="Horizontal" Margin="0 5 0 0">
-                    <Label Content="Task priority: " Width="200"/>
-                    <ComboBox x:Name="priorityCB"  Width="150" Margin="0 5 5 5"/>
-                </StackPanel>
-                <StackPanel Height="130" Orientation="Vertical" Margin="0 5 0 0">
-                    <StackPanel Height="35" Orientation="Horizontal" Margin="0 5 0 0">
-                        <Label Content="Resources: " Width="200"/>
-                        <Button x:Name="addResourceBtn" Content="Add Resource" Width="150" Margin="0 5 5 5" Click="addResourceBtn_Click"/>
-                    </StackPanel>
-                    <ListBox x:Name="resourcesLB" Height="82" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="0 5 0 5"/>
-                </StackPanel>
-                <Button x:Name="addTaskBtn" Content="Add Task" Margin="125 10 100 5" Width="150" Height="25" Click="addTaskBtn_Click"/>
-
+                <Label Content="Choose the task type" Margin="5 5 5 5" Width="200"/>
+                <ComboBox x:Name="taskTypeCB" Width="250" Height="25" Margin="5 5 5 5" IsReadOnly="True"/>
+                <Button x:Name="addTaskBtn" Content="Add Task" Width="150" Margin="50 5 5 5" Click="addTaskBtn_Click"/>
             </StackPanel>
             <Separator Margin="5 5 5 5"/>
-            <ScrollViewer VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Visible" CanContentScroll="True">
+            <Label Content="Tasks" HorizontalAlignment="Center"/>
+            <ScrollViewer VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Visible" CanContentScroll="True" Height="300">
                 <StackPanel x:Name="tasksSP" Height="200" Orientation="Vertical" CanVerticallyScroll="True"/>
             </ScrollViewer>
         </StackPanel>

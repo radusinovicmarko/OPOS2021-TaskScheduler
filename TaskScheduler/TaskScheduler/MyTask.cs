@@ -36,6 +36,11 @@ namespace TaskScheduler
         protected TaskState _state;
         [NonSerialized]
         protected Action _action;
+        [NonSerialized]
+        protected Action? _progressBarUpdateAction;
+        [NonSerialized]
+        protected Action? _finishedTaskCallback;
+
         protected readonly DateTime _deadline;
         protected readonly double _maxExecTime;
         protected int _maxDegreeOfParalellism;
@@ -43,6 +48,9 @@ namespace TaskScheduler
         protected readonly ControlToken? _controlToken;
         protected readonly ControlToken? _userControlToken;
         protected TaskPriority _priority;
+
+        protected double _progress = 0.0;
+
         //ReadWriteLock
         protected List<Resource>? _resources = null;
 
@@ -70,8 +78,13 @@ namespace TaskScheduler
 
         [XmlIgnore]
         [JsonIgnore]
-        public Action Action2 { get; set; }
-        public double Progress { get; set; }
+        public Action? ProgressBarUpdateAction { get { return _progressBarUpdateAction; } set { _progressBarUpdateAction = value; } }
+
+        [XmlIgnore]
+        [JsonIgnore]
+        public Action? FinishedTaskCallback { get { return _finishedTaskCallback; } set { _finishedTaskCallback = value; } }
+
+        public double Progress { get { return _progress; } protected set { _progress = value; } }
 
         public List<Resource>? Resources => _resources;
 
