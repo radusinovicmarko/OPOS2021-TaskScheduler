@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Xml;
 using System.Xml.Serialization;
 
 namespace TaskScheduler
@@ -21,16 +23,20 @@ namespace TaskScheduler
 
         private int maxHeight = 0;
 
+        private FolderResource outputFolder;
+
         public EdgeDetectionTask() 
         {
             Action = this.EdgeDetection;
+            outputFolder = new FolderResource(".");
         }
 
-        public EdgeDetectionTask(DateTime deadline, double maxExecTime, int maxDegreeOfParalellism, ControlToken? token, ControlToken? userToken, TaskPriority priority, params Resource[] resources) 
+        public EdgeDetectionTask(DateTime deadline, double maxExecTime, int maxDegreeOfParalellism, ControlToken? token, ControlToken? userToken, TaskPriority priority, FolderResource output, params Resource[] resources) 
             : base(null, deadline, maxExecTime, maxDegreeOfParalellism, token, userToken, priority, resources)
         {
             if (resources.Length == 0)
                 throw new ArgumentException("At least one resource image must be specified.");
+            outputFolder = output;
             Action = this.EdgeDetection;
         }
 
@@ -38,10 +44,13 @@ namespace TaskScheduler
         {
             if (_resources.Count == 1)
             {
-                Bitmap originalImage = (Bitmap)Bitmap.FromFile(((FileResource)_resources.ElementAt(0)).Path);
+                string resourcePath = ((FileResource)_resources.ElementAt(0)).Path;
+                Bitmap originalImage = (Bitmap)Bitmap.FromFile(resourcePath);
                 maxHeight = originalImage.Height;
                 Bitmap? newImage = EdgeDetectionAlgorithm(originalImage, MaxDegreeOfParalellism);
-                newImage?.Save("test" + new Random().Next() + ".jfif");
+                string resName = resourcePath.Substring(resourcePath.LastIndexOf(Path.DirectorySeparatorChar) + 1);
+                string outputPath = Path.Combine(outputFolder.Path, "EdgeDetection_" + resName);
+                newImage?.Save(outputPath);
                 _resourcesProcessed[0] = true;
             }
             else
@@ -52,8 +61,11 @@ namespace TaskScheduler
                  {
                      if (!_resourcesProcessed[i])
                      {
-                         Bitmap? newImage = EdgeDetectionAlgorithm((Bitmap)Bitmap.FromFile(((FileResource)_resources.ElementAt(i)).Path), 1);
-                         newImage?.Save("test" + (i*100 + 50) + ".jfif");
+                         string resourcePath = ((FileResource)_resources.ElementAt(i)).Path;
+                         Bitmap? newImage = EdgeDetectionAlgorithm((Bitmap)Bitmap.FromFile(resourcePath), 1);
+                         string resName = resourcePath.Substring(resourcePath.LastIndexOf(Path.DirectorySeparatorChar) + 1);
+                         string outputPath = Path.Combine(outputFolder.Path, "EdgeDetection_" + resName);
+                         newImage?.Save(outputPath);
                          _resourcesProcessed[i] = true;
                      }
                  });
@@ -162,9 +174,91 @@ namespace TaskScheduler
             return ControlToken != null ? ControlToken.Terminated ? null : newImg : newImg;
         }
 
+        private Bitmap? UnsafeEdgeDetectionAlgorithm(Bitmap clone, int degree)
+        {
+            Bitmap newImg = (Bitmap)clone.Clone();
+            BitmapData bmd = newImg.LockBits(new Rectangle(0, 0, newImg.Width, newImg.Height),ImageLockMode.ReadWrite, newImg.PixelFormat);
+            int PixelSize = 4;
+
+            unsafe
+            {
+                for (int y = 0; y < bmd.Height - 2; y++)
+                {
+                    byte* row = (byte*)bmd.Scan0 + (y * bmd.Stride);
+                    byte* row1 = (byte*)bmd.Scan0 + ((y + 1) * bmd.Stride);
+                    byte* row2 = (byte*)bmd.Scan0 + ((y + 2) * bmd.Stride);
+                    Color[,] pixelColor = new Color[3, 3];
+                    //int y = i;
+                    int A, R, G, B;
+                    Bitmap b;
+                    for (int x = 0; x < bmd.Width - 2; x++)
+                    {
+
+                        /*B = row[x * PixelSize] = 0;   //Blue  0-255
+                        G = row[x * PixelSize + 1] = 255; //Green 0-255
+                        R = row[x * PixelSize + 2] = 0;   //Red   0-255*/
+                        A = row[x * PixelSize + 3] = 50;  //Alpha 0-255
+
+                        /* pixelColor[0, 0] = b.GetPixel(x, y);
+                    pixelColor[0, 1] = b.GetPixel(x, y + 1);
+                    pixelColor[0, 2] = b.GetPixel(x, y + 2);
+                    pixelColor[1, 0] = b.GetPixel(x + 1, y);
+                    pixelColor[1, 1] = b.GetPixel(x + 1, y + 1);
+                    pixelColor[1, 2] = b.GetPixel(x + 1, y + 2);
+                    pixelColor[2, 0] = b.GetPixel(x + 2, y);
+                    pixelColor[2, 1] = b.GetPixel(x + 2, y + 1);
+                    pixelColor[2, 2] = b.GetPixel(x + 2, y + 2);*/
+                        R = (int)(row[x * PixelSize + 1] * edgeDetectionKernel[0, 0]) +
+                                 (row[(x + 1) * PixelSize + 1] * edgeDetectionKernel[1, 0]) +
+                                 (row[(x + 2) * PixelSize + 1] * edgeDetectionKernel[2, 0]) +
+                                 (row1[x * PixelSize + 1] * edgeDetectionKernel[0, 1]) +
+                                 (row1[(x + 1) * PixelSize + 1] * edgeDetectionKernel[1, 1]) +
+                                 (row1[(x + 2) * PixelSize + 1] * edgeDetectionKernel[2, 1]) +
+                                 (row2[x * PixelSize + 1] * edgeDetectionKernel[0, 2]) +
+                                 (row2[(x + 1) * PixelSize + 1]  * edgeDetectionKernel[1, 2]) +
+                                 (row2[(x + 2) * PixelSize + 1] * edgeDetectionKernel[2, 2]);
+
+                        R = R < 0 ? 0 : R > 255 ? 255 : R;
+
+                        G = (int)(row[x * PixelSize + 2] * edgeDetectionKernel[0, 0]) +
+                                 (row[(x + 1) * PixelSize + 2] * edgeDetectionKernel[1, 0]) +
+                                 (row[(x + 2) * PixelSize + 2] * edgeDetectionKernel[2, 0]) +
+                                 (row1[x * PixelSize + 2] * edgeDetectionKernel[0, 1]) +
+                                 (row1[(x + 1) * PixelSize + 2] * edgeDetectionKernel[1, 1]) +
+                                 (row1[(x + 2) * PixelSize + 2] * edgeDetectionKernel[2, 1]) +
+                                 (row2[x * PixelSize + 2] * edgeDetectionKernel[0, 2]) +
+                                 (row2[(x + 1) * PixelSize + 2] * edgeDetectionKernel[1, 2]) +
+                                 (row2[(x + 2) * PixelSize + 2] * edgeDetectionKernel[2, 2]);
+
+                        G = G < 0 ? 0 : G > 255 ? 255 : G;
+
+                        B = (int)(row[x * PixelSize + 3] * edgeDetectionKernel[0, 0]) +
+                                 (row[(x + 1) * PixelSize + 3] * edgeDetectionKernel[1, 0]) +
+                                 (row[(x + 2) * PixelSize + 3] * edgeDetectionKernel[2, 0]) +
+                                 (row1[x * PixelSize + 3] * edgeDetectionKernel[0, 1]) +
+                                 (row1[(x + 1) * PixelSize + 3] * edgeDetectionKernel[1, 1]) +
+                                 (row1[(x + 2) * PixelSize + 3] * edgeDetectionKernel[2, 1]) +
+                                 (row2[x * PixelSize + 3] * edgeDetectionKernel[0, 2]) +
+                                 (row2[(x + 1) * PixelSize + 3] * edgeDetectionKernel[1, 2]) +
+                                 (row2[(x + 2) * PixelSize + 3] * edgeDetectionKernel[2, 2]);
+                        B = B < 0 ? 0 : B > 255 ? 255 : B;
+
+                        row1[(x + 1) * PixelSize] = (byte)B;
+                        row1[(x + 1) * PixelSize + 1] = (byte)G;
+                        row1[(x + 1) * PixelSize + 2] = (byte)R;
+                        row1[(x + 1) * PixelSize + 3] = (byte)A;
+                    }
+                }
+            }
+
+            newImg.UnlockBits(bmd);
+            return newImg;
+            //bmp.Save("test.png", ImageFormat.Png);
+        }
+
         public override void Serialize()
         {
-            string fileName = this.GetType().AssemblyQualifiedName + "_" + DateTime.Now.Ticks + ".bin";
+            string fileName = this.GetType().AssemblyQualifiedName + "_" + DateTime.Now.Ticks + ".xml";
 
             //XmlSerializer serializer = new XmlSerializer(typeof(EdgeDetectionTask));
             //using StreamWriter writer = new StreamWriter(fileName);
@@ -315,6 +409,18 @@ namespace TaskScheduler
             foreach (Thread t in threads)
                 t.Join();
             return newImg;
+        }
+
+        public void ReadXml(XmlReader reader)
+        {
+        }
+
+        public override void WriteXml(XmlWriter writer)
+        {
+            base.WriteXml(writer);
+            writer.WriteStartElement("Derived");
+            writer.WriteAttributeString("FolderOutput", ".");
+            writer.WriteEndElement();
         }
     }
 }

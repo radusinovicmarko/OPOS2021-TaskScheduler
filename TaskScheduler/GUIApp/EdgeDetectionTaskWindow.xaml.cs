@@ -1,4 +1,5 @@
 ﻿using Microsoft.Win32;
+using Ookii.Dialogs.Wpf;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -53,6 +54,13 @@ namespace GUIApp
                 resourcesLB.Items.Add(fileDialog.FileName);
         }
 
+        private void addOutputFolderBtn_Click(object sender, RoutedEventArgs e)
+        {
+            VistaFolderBrowserDialog dialog = new();
+            if (dialog.ShowDialog() == true)
+                outputFolderLbl.Content = dialog.SelectedPath;
+        }
+
         private void AddTaskBtn_Click(object sender, RoutedEventArgs e)
         {
             if (!Int32.TryParse(maxExecTimeTB.Text, out int maxExecTime))
@@ -62,11 +70,13 @@ namespace GUIApp
             MyTask.TaskPriority priority;
             if (!Enum.TryParse(priorityCB.SelectedItem.ToString(), out priority))
                 System.Windows.MessageBox.Show("...");
+            if (outputFolderLbl.Content == null || outputFolderLbl.Content.Equals(""))
+                System.Windows.MessageBox.Show("...");
             List<Resource> resources = new List<Resource>();
             foreach (string item in resourcesLB.Items)
                 resources.Add(new FileResource(item));
             ControlToken? controlToken = preemptiveScheduling ? new() : null;
-            task = new EdgeDetectionTask((DateTime)deadlineDTP.Value, maxExecTime, maxDegreeOfParallelism, controlToken, new ControlToken(), priority, resources.ToArray());
+            task = new EdgeDetectionTask((DateTime)deadlineDTP.Value, maxExecTime, maxDegreeOfParallelism, controlToken, new ControlToken(), priority, new FolderResource(outputFolderLbl.Content.ToString()), resources.ToArray());
             this.Hide();
         }
     }

@@ -1,7 +1,10 @@
 ﻿using System.Diagnostics;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace TaskScheduler
 {
+    [Serializable]
     public class TaskScheduler
     {
         private readonly int _maxNumberOfCores;
@@ -11,12 +14,14 @@ namespace TaskScheduler
 
         public int _coresTaken = 0;
 
+        [NonSerialized]
         private PriorityQueue<MyTask, MyTask.TaskPriority> _scheduledTasks = new (new MyTaskComparer());
 
         private List<MyTask?> _runningTasks;
 
         private Dictionary<MyTask, int> _runningTasks2 = new Dictionary<MyTask, int>();
 
+        [NonSerialized]
         private Dictionary<MyTask, Stopwatch> _stopwatches = new Dictionary<MyTask, Stopwatch>();
 
         private Dictionary<MyTask, List<Resource>> _resourcesTaken = new Dictionary<MyTask, List<Resource>>();
@@ -40,7 +45,7 @@ namespace TaskScheduler
                 _runningTasks.Add(null);
                 _coresTakenByRunningTasks.Add(0);
             }
-            Process.GetCurrentProcess().ProcessorAffinity = getProcessorAffinity(maxNumberOfCores);
+            Process.GetCurrentProcess().ProcessorAffinity = GetProcessorAffinity(maxNumberOfCores);
         }
 
         public TaskScheduler(int maxNumberOfCores, int maxNumberOfConcurrentTasks, bool preemptiveScheduling) 
@@ -49,7 +54,7 @@ namespace TaskScheduler
             _preemptiveScheduling = preemptiveScheduling;
         }
 
-        private IntPtr getProcessorAffinity(int maxNumberOfCores)
+        private static IntPtr GetProcessorAffinity(int maxNumberOfCores)
         {
             int affinity = 0, i = 1;
             while (maxNumberOfCores > 0)
@@ -66,7 +71,7 @@ namespace TaskScheduler
 
         public void AddTask(MyTask myTask)
         {
-            int maxNumberOfTasks = Math.Min(_maxNumberOfConcurrentTasks, _maxNumberOfCores);
+            //int maxNumberOfTasks = Math.Min(_maxNumberOfConcurrentTasks, _maxNumberOfCores);
             lock (_lock)
             {
                 _scheduledTasks.Enqueue(myTask, myTask.Priority);
@@ -243,7 +248,7 @@ namespace TaskScheduler
             return (true, null);
         }
 
-        private static void CancelTask(MyTask task)
+        /*private static void CancelTask(MyTask task)
         {
             if (task.ControlToken == null)
                 return;
@@ -256,6 +261,22 @@ namespace TaskScheduler
                     break;
                 }
             }
+        }*/
+
+        public void Serialize(string folderPath)
+        {
+            string fileName = folderPath + Path.DirectorySeparatorChar + this.GetType().Name + "_" + DateTime.Now.Ticks + ".bin";
+
+            IFormatter formatter = new BinaryFormatter();
+            using Stream stream = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
+            formatter.Serialize(stream, this);
+        }
+
+        public static TaskScheduler Deserialize(string fileName)
+        {
+            IFormatter formatter = new BinaryFormatter();
+            using Stream stream = new FileStream(fileName, FileMode.Open);
+            return (TaskScheduler)formatter.Deserialize(stream);
         }
 
         private void CancelTasks()
@@ -275,7 +296,12 @@ namespace TaskScheduler
             }
         }
 
-        private void ThreadCoreExecution(int i)
+        public override string ToString()
+        {
+            return _resourcesTaken2.Count + "\n" + _runningTasks2.Count;
+        }
+
+        /*private void ThreadCoreExecution(int i)
         {
             while (true)
             {
@@ -331,6 +357,6 @@ namespace TaskScheduler
                     lock (_lock)
                         Monitor.Wait(_lock);
             }
-        }
+        }*/
     }
 }

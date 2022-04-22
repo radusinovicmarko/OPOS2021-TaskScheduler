@@ -8,12 +8,13 @@ using System.Xml.Serialization;
 using System.Text.Json.Serialization;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Xml.Schema;
+using System.Xml;
 
 namespace TaskScheduler
 {
     [Serializable]
-    [XmlInclude(typeof(EdgeDetectionTask))]
-    public class MyTask
+    public class MyTask : IXmlSerializable
     {
 
         public enum TaskState
@@ -150,7 +151,7 @@ namespace TaskScheduler
 
         public virtual void Serialize()
         {
-            string fileName = this.GetType().AssemblyQualifiedName + "_" + DateTime.Now.Ticks + ".bin";
+            string fileName = this.GetType().AssemblyQualifiedName + "_" + DateTime.Now.Ticks + ".xml";
 
             //XmlSerializer serializer = new XmlSerializer(typeof(MyTask));
             //using StreamWriter writer = new StreamWriter(fileName);
@@ -178,6 +179,31 @@ namespace TaskScheduler
             IFormatter formatter = new BinaryFormatter();
             using Stream stream = new FileStream(fileName, FileMode.Open);
             return (MyTask)formatter.Deserialize(stream);
+        }
+
+        public XmlSchema? GetSchema()
+        {
+            return null;
+        }
+
+        public void ReadXml(XmlReader reader)
+        {
+        }
+
+        public virtual void WriteXml(XmlWriter writer)
+        {
+            writer.WriteAttributeString("State", _state.ToString());
+            writer.WriteAttributeString("Deadline", _deadline.ToBinary().ToString());
+            writer.WriteAttributeString("MaxExecTime", _maxExecTime.ToString());
+            writer.WriteAttributeString("MaxDegreeOfParalellism", _maxDegreeOfParalellism.ToString());
+            writer.WriteAttributeString("TaskTerminated", _terminated.ToString());
+            writer.WriteAttributeString("Priority", _priority.ToString());
+            writer.WriteStartElement("ControlToken");
+            _controlToken?.WriteXml(writer);
+            writer.WriteEndElement();
+            writer.WriteStartElement("UserControlToken");
+            _userControlToken?.WriteXml(writer);
+            writer.WriteEndElement();
         }
     }
 }

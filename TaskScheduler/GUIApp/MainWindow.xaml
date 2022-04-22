@@ -5,13 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         WindowStartupLocation="CenterScreen"
-        Title="Task Scheduler App" Height="400" Width="710" Closing="Window_Closing">
+        Title="Task Scheduler App" Height="470" Width="710" Closing="Window_Closing">
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="101*"/>
-            <ColumnDefinition Width="399*"/>
-        </Grid.ColumnDefinitions>
-        <StackPanel Grid.ColumnSpan="2">
+        <StackPanel>
             <StackPanel Height="35" Orientation="Horizontal" Margin="5 5 5 5">
                 <Label Content="Choose the task type" Margin="5 5 5 5" Width="200"/>
                 <ComboBox x:Name="taskTypeCB" Width="250" Height="25" Margin="5 5 5 5" IsReadOnly="True"/>
@@ -22,7 +18,9 @@
             <ScrollViewer VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Visible" CanContentScroll="True" Height="300">
                 <StackPanel x:Name="tasksSP" Height="200" Orientation="Vertical" CanVerticallyScroll="True"/>
             </ScrollViewer>
+            <StackPanel Margin="5 5 5 5">
+                <Button x:Name="saveBtn" Content="Save" HorizontalAlignment="Center" Height="30" Width="100" Margin="5 5 5 5" Click="SaveBtn_Click"/>
+            </StackPanel>
         </StackPanel>
-
     </Grid>
 </Window>

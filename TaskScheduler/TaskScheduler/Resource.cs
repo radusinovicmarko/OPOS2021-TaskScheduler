@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
+using System.Xml.Schema;
+using System.Xml.Serialization;
 
 namespace TaskScheduler
 {
     [Serializable]
-    public class Resource
+    public class Resource : IXmlSerializable
     {
         protected bool _locked = false;
 
@@ -39,6 +42,21 @@ namespace TaskScheduler
         public override int GetHashCode()
         {
             return base.GetHashCode();
+        }
+
+        public XmlSchema? GetSchema()
+        {
+            return null;
+        }
+
+        public void ReadXml(XmlReader reader)
+        {
+            
+        }
+
+        public void WriteXml(XmlWriter writer)
+        {
+            task?.WriteXml(writer);
         }
     }
 }

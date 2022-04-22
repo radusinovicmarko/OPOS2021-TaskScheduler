@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
+using System.Xml.Schema;
+using System.Xml.Serialization;
 
 namespace TaskScheduler
 {
     [Serializable]
-    public class ControlToken
+    public class ControlToken : IXmlSerializable
     {
         private bool _paused = false;
         private bool _terminated = false;
@@ -35,5 +38,20 @@ namespace TaskScheduler
                 Monitor.PulseAll(_lock);
         }
 
+        public XmlSchema? GetSchema()
+        {
+            return null;
+        }
+
+        public void ReadXml(XmlReader reader)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void WriteXml(XmlWriter writer)
+        {
+            writer.WriteAttributeString("Paused", _paused.ToString());
+            writer.WriteAttributeString("Terminated", _terminated.ToString());
+        }
     }
 }

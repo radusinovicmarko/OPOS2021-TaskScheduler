@@ -7,9 +7,9 @@
         mc:Ignorable="d"
         WindowStartupLocation="CenterScreen"
         Topmost="True"
-        Title="EdgeDetectionTaskWindow" Height="410" Width="500">
+        Title="EdgeDetectionTaskWindow" Height="500" Width="500">
     <Grid>
-        <StackPanel x:Name="mainSP" Orientation="Vertical" Height="380">
+        <StackPanel x:Name="mainSP" Orientation="Vertical" Height="455">
             <StackPanel Orientation="Horizontal" Height="35">
                 <Label Content="Edge Detection Task Settings" Margin="175 5 5 5"/>
             </StackPanel>
@@ -34,6 +34,13 @@
                     <Button x:Name="addResourceBtn" Content="Add Resource" Width="150" Margin="5 5 5 5" Click="addResourceBtn_Click"/>
                 </StackPanel>
                 <ListBox x:Name="resourcesLB" Height="82" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="5 5 5 5"/>
+            </StackPanel>
+            <StackPanel Height="35" Orientation="Horizontal" Margin="0 5 0 0">
+                <Label Content="OutputFolder: " Width="200"/>
+                <Button x:Name="addOutputFolderBtn" Content="Add Output Folder" Width="150" Margin="5 5 5 5" Click="addOutputFolderBtn_Click" />
+            </StackPanel>
+            <StackPanel Height="35" Orientation="Horizontal" Margin="0 5 0 0">
+                <Label x:Name="outputFolderLbl" Width="150" Margin="205 5 5 5"/>
             </StackPanel>
             <StackPanel Height="35" Orientation="Vertical" Margin="0 10 0 5">
                 <Button x:Name="addTaskBtn" HorizontalAlignment="Center" Content="Add Task" Width="120" Margin="5 5 5 5" Height="22" Click="AddTaskBtn_Click"/>

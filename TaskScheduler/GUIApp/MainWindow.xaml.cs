@@ -1,6 +1,7 @@
 ﻿using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -27,15 +28,24 @@ namespace GUIApp
     {
         private StackPanel tasksStackPanel;
         private Dictionary<string, Action> taskTypes = new();
-        private List<MyTask> tasks = new List<MyTask>();
         private TaskScheduler.TaskScheduler scheduler;
         private bool priorityScheduling, preemptiveScheduling;
+
+
+        public static readonly string folderPath = ".." + System.IO.Path.DirectorySeparatorChar + ".." + System.IO.Path.DirectorySeparatorChar + ".." + System.IO.Path.DirectorySeparatorChar + "saves";
 
         private static readonly int autosaveIntervalMs = 5000;
 
         public MainWindow(int cores, int concTasks, bool priority, bool preemptive)
         {
             InitializeComponent();
+
+            if (!File.Exists(folderPath))
+                Directory.CreateDirectory(folderPath);
+
+            TaskScheduler.TaskScheduler scheduler1 = TaskScheduler.TaskScheduler.Deserialize(folderPath + System.IO.Path.DirectorySeparatorChar + "TaskScheduler_637849402613931537.bin");
+            System.Windows.MessageBox.Show(scheduler1.ToString());
+
             priorityScheduling = priority;
             preemptiveScheduling = preemptive;
             scheduler = new TaskScheduler.TaskScheduler(cores, concTasks, preemptiveScheduling);
@@ -50,7 +60,7 @@ namespace GUIApp
             ResizeMode = ResizeMode.CanMinimize;
             taskTypeCB.ItemsSource = taskTypes.Keys;
             scheduler.Start();
-            /*new Thread(() =>
+            new Thread(() =>
             {
                 while (true)
                 {
@@ -58,12 +68,15 @@ namespace GUIApp
                     Thread.Sleep(autosaveIntervalMs);
                 }
             })
-            { IsBackground = true }.Start();*/
+            { IsBackground = true };//.Start();
         }
 
         private void Save()
         {
-            throw new NotImplementedException();
+            DirectoryInfo directoryInfo = new(folderPath);
+            foreach (var fileInfo in directoryInfo.GetFiles())
+                fileInfo.Delete();
+            scheduler.Serialize(folderPath);
         }
 
        /* private EdgeDetectionTask CreateEdgeDetectionTask()
@@ -141,6 +154,11 @@ namespace GUIApp
             }
             else
                 System.Windows.MessageBox.Show("...");
+        }
+
+        private void SaveBtn_Click(object sender, RoutedEventArgs e)
+        {
+            Save();
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
