@@ -24,7 +24,7 @@ namespace TaskScheduler
         [NonSerialized]
         private Dictionary<MyTask, Stopwatch> _stopwatches = new();
 
-        private readonly Dictionary<MyTask, long> _elapsedTime = new();
+        private readonly Dictionary<MyTask, double> _elapsedTime = new();
 
         private readonly Dictionary<MyTask, List<Resource>> _resourcesTaken = new();
 
@@ -273,7 +273,7 @@ namespace TaskScheduler
 
             _elapsedTime.Clear();
             foreach (var task in _stopwatches.Keys)
-                _elapsedTime.Add(task, _stopwatches[task].ElapsedMilliseconds);
+                _elapsedTime.Add(task, _stopwatches[task].Elapsed.TotalSeconds);
 
             IFormatter formatter = new BinaryFormatter();
             using Stream stream = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None);

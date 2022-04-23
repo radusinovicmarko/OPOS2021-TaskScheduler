@@ -34,7 +34,7 @@ namespace GUIApp
         private TaskScheduler.TaskScheduler scheduler;
         private bool priorityScheduling;
         private bool preemptiveScheduling;
-        public static readonly string folderPath = "C:\\Users\\User20\\Desktop\\saves"; //".." + System.IO.Path.DirectorySeparatorChar + ".." + System.IO.Path.DirectorySeparatorChar + ".." + System.IO.Path.DirectorySeparatorChar + "saves";
+        public static readonly string folderPath = /*"C:\\Users\\User20\\Desktop\\saves"; //*/".." + System.IO.Path.DirectorySeparatorChar + ".." + System.IO.Path.DirectorySeparatorChar + ".." + System.IO.Path.DirectorySeparatorChar + "saves";
         public static readonly string tasksPath = folderPath + System.IO.Path.DirectorySeparatorChar + "task saves";
 
         private static readonly int autosaveIntervalMs = 5000;

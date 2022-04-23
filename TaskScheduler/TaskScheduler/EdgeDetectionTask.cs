@@ -42,8 +42,11 @@ namespace TaskScheduler
 
         private void EdgeDetection()
         {
+            maxHeight = 0;
+            noRows = 0;
             if (_resources.Count == 1)
             {
+                _progress = 0;
                 string resourcePath = ((FileResource)_resources.ElementAt(0)).Path;
                 Bitmap originalImage = (Bitmap)Bitmap.FromFile(resourcePath);
                 maxHeight = originalImage.Height;
@@ -57,6 +60,13 @@ namespace TaskScheduler
             {
                 foreach (var resource in _resources)
                     maxHeight += ((Bitmap)Bitmap.FromFile(((FileResource)resource).Path)).Height;
+                for (int i = 0; i < _resourcesProcessed.Count; i++)
+                    if (_resourcesProcessed[i])
+                    {
+                        int height = ((Bitmap)Bitmap.FromFile(((FileResource)_resources[i]).Path)).Height;
+                        noRows += height;
+                    }
+                _progress = (double)noRows / maxHeight;
                 Parallel.For(0, _resources.Count, new ParallelOptions { MaxDegreeOfParallelism = MaxDegreeOfParalellism }, i =>
                  {
                      if (!_resourcesProcessed[i])

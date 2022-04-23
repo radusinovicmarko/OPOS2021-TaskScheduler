@@ -35,7 +35,7 @@ namespace GUIApp
             foreach (var fileInfo in directoryInfo.GetFiles())
                 if (fileInfo.Name.StartsWith("TaskScheduler"))
                 {
-                    if (MessageBox.Show("A save file has been detected. Do you want to load data from it?", "Load", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) == MessageBoxResult.Yes)
+                    if (MessageBox.Show("A save file has been detected. Do you want to load the data from it?", "Load", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) == MessageBoxResult.Yes)
                     {
                         MainWindow win = new();
                         this.Hide();
