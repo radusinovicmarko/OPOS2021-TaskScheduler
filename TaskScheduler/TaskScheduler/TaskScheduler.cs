@@ -9,49 +9,48 @@ namespace TaskScheduler
     {
         private readonly int _maxNumberOfCores;
         private readonly int _maxNumberOfConcurrentTasks;
+        [NonSerialized]
         private bool _started = false;
-        private bool _preemptiveScheduling;
-
-        public int _coresTaken = 0;
+        private readonly bool _preemptiveScheduling;
+        private readonly bool _priorityScheduling;
+        private int _coresTaken = 0;
 
         [NonSerialized]
         private PriorityQueue<MyTask, MyTask.TaskPriority> _scheduledTasks = new (new MyTaskComparer());
 
-        private List<MyTask?> _runningTasks;
-
-        private Dictionary<MyTask, int> _runningTasks2 = new Dictionary<MyTask, int>();
+        [NonSerialized]
+        private Dictionary<MyTask, int> _runningTasks2 = new();
 
         [NonSerialized]
-        private Dictionary<MyTask, Stopwatch> _stopwatches = new Dictionary<MyTask, Stopwatch>();
+        private Dictionary<MyTask, Stopwatch> _stopwatches = new();
 
-        private Dictionary<MyTask, List<Resource>> _resourcesTaken = new Dictionary<MyTask, List<Resource>>();
+        private readonly Dictionary<MyTask, long> _elapsedTime = new();
 
-        private HashSet<Resource> _resourcesTaken2 = new HashSet<Resource>();
+        private readonly Dictionary<MyTask, List<Resource>> _resourcesTaken = new();
 
-        private List<int> _coresTakenByRunningTasks = new List<int>();
+        private readonly HashSet<Resource> _resourcesTaken2 = new();
 
-        private object _lock = new object();
+        private readonly object _lock = new();
 
         public int MaxNumberOfCores => _maxNumberOfCores;
         public int MaxNumberOfConcurrentTasks => _maxNumberOfConcurrentTasks;
+
+        public bool PriorityScheduling => _priorityScheduling;
+
+        public bool PreemptiveScheduling => _preemptiveScheduling;
 
         public TaskScheduler(int maxNumberOfCores, int maxNumberOfConcurrentTasks)
         {
             _maxNumberOfCores = maxNumberOfCores;
             _maxNumberOfConcurrentTasks = maxNumberOfConcurrentTasks;
-            _runningTasks = new List<MyTask?>(maxNumberOfCores);
-            for (int i = 0; i < maxNumberOfCores; i++)
-            {
-                _runningTasks.Add(null);
-                _coresTakenByRunningTasks.Add(0);
-            }
             Process.GetCurrentProcess().ProcessorAffinity = GetProcessorAffinity(maxNumberOfCores);
         }
 
-        public TaskScheduler(int maxNumberOfCores, int maxNumberOfConcurrentTasks, bool preemptiveScheduling) 
+        public TaskScheduler(int maxNumberOfCores, int maxNumberOfConcurrentTasks, bool preemptiveScheduling, bool priorityScheduling) 
             : this(maxNumberOfCores, maxNumberOfConcurrentTasks)
         {
             _preemptiveScheduling = preemptiveScheduling;
+            _priorityScheduling = priorityScheduling;
         }
 
         private static IntPtr GetProcessorAffinity(int maxNumberOfCores)
@@ -240,8 +239,7 @@ namespace TaskScheduler
                 foreach (var resource in nextTask.Resources)
                     if (_resourcesTaken2.Contains(resource))
                     {
-                        Resource r;
-                        _resourcesTaken2.TryGetValue(resource, out r);
+                        _resourcesTaken2.TryGetValue(resource, out Resource r);
                         if (r.Locked && r.Task != nextTask)
                             return (false, r.Task);
                     }        
@@ -267,6 +265,16 @@ namespace TaskScheduler
         {
             string fileName = folderPath + Path.DirectorySeparatorChar + this.GetType().Name + "_" + DateTime.Now.Ticks + ".bin";
 
+            foreach (var task in _runningTasks2.Keys)
+                task.Serialize(folderPath + Path.DirectorySeparatorChar + "task saves");
+
+            foreach (var (Element, _) in _scheduledTasks.UnorderedItems)
+                Element.Serialize(folderPath + Path.DirectorySeparatorChar + "task saves");
+
+            _elapsedTime.Clear();
+            foreach (var task in _stopwatches.Keys)
+                _elapsedTime.Add(task, _stopwatches[task].ElapsedMilliseconds);
+
             IFormatter formatter = new BinaryFormatter();
             using Stream stream = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
             formatter.Serialize(stream, this);
@@ -276,7 +284,30 @@ namespace TaskScheduler
         {
             IFormatter formatter = new BinaryFormatter();
             using Stream stream = new FileStream(fileName, FileMode.Open);
-            return (TaskScheduler)formatter.Deserialize(stream);
+            TaskScheduler scheduler = (TaskScheduler)formatter.Deserialize(stream);
+            Process.GetCurrentProcess().ProcessorAffinity = GetProcessorAffinity(scheduler._maxNumberOfCores);
+            scheduler._started = false;
+            scheduler._coresTaken = 0;
+            scheduler._runningTasks2 = new();
+            scheduler._stopwatches = new();
+            scheduler._resourcesTaken2.Clear();
+            scheduler._scheduledTasks = new(new MyTaskComparer());
+
+            /*foreach (var task in scheduler._runningTasks2.Keys)
+            {
+                task.State = MyTask.TaskState.Ready;    
+                scheduler.AddTask(task);
+            }*/
+
+            /*foreach (var file in Directory.GetFiles(tasksFolder))
+            {
+                string name = Path.GetFileName(file);
+                string type = name.Substring(0, name.IndexOf('_'));
+                MyTask task = (MyTask)Type.GetType(type).GetMethod("Deserialize").Invoke(null, new object[] { file });
+                scheduler.AddTask(task);
+            }*/
+
+            return scheduler;
         }
 
         private void CancelTasks()

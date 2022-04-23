@@ -10,7 +10,7 @@ using System.Xml.Serialization;
 namespace TaskScheduler
 {
     [Serializable]
-    public class ControlToken : IXmlSerializable
+    public class ControlToken //: IXmlSerializable
     {
         private bool _paused = false;
         private bool _terminated = false;
@@ -38,7 +38,7 @@ namespace TaskScheduler
                 Monitor.PulseAll(_lock);
         }
 
-        public XmlSchema? GetSchema()
+        /*public XmlSchema? GetSchema()
         {
             return null;
         }
@@ -52,6 +52,6 @@ namespace TaskScheduler
         {
             writer.WriteAttributeString("Paused", _paused.ToString());
             writer.WriteAttributeString("Terminated", _terminated.ToString());
-        }
+        }*/
     }
 }

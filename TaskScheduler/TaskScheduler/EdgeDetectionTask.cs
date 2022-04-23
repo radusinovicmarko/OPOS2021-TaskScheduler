@@ -256,9 +256,9 @@ namespace TaskScheduler
             //bmp.Save("test.png", ImageFormat.Png);
         }
 
-        public override void Serialize()
+        public override void Serialize(string folderPath)
         {
-            string fileName = this.GetType().AssemblyQualifiedName + "_" + DateTime.Now.Ticks + ".xml";
+            string fileName = folderPath + Path.DirectorySeparatorChar + this.GetType().Name + "_" + DateTime.Now.Ticks + ".bin";
 
             //XmlSerializer serializer = new XmlSerializer(typeof(EdgeDetectionTask));
             //using StreamWriter writer = new StreamWriter(fileName);
@@ -290,7 +290,7 @@ namespace TaskScheduler
             return task;
         }
 
-        private Bitmap EdgeDetectionAlgorithm2(Bitmap clone)
+        /*private Bitmap EdgeDetectionAlgorithm2(Bitmap clone)
         {
             Bitmap newImg = (Bitmap)clone.Clone();
             int chunk = clone.Height / MaxDegreeOfParalellism;
@@ -354,7 +354,7 @@ namespace TaskScheduler
                             {
                                 R = 255;
                             }*/
-                            R = R < 0 ? 0 : R > 255 ? 255 : R;
+                            /*R = R < 0 ? 0 : R > 255 ? 255 : R;
 
                             G = (int)(pixelColor[0, 0].G * edgeDetectionKernel[0, 0]) +
                                          (pixelColor[1, 0].G * edgeDetectionKernel[1, 0]) +
@@ -374,7 +374,7 @@ namespace TaskScheduler
                             {
                                 G = 255;
                             }*/
-                            G = G < 0 ? 0 : G > 255 ? 255 : G;
+                            /*G = G < 0 ? 0 : G > 255 ? 255 : G;
 
                             B = (int)(pixelColor[0, 0].B * edgeDetectionKernel[0, 0]) +
                                          (pixelColor[1, 0].B * edgeDetectionKernel[1, 0]) +
@@ -394,7 +394,7 @@ namespace TaskScheduler
                             {
                                 B = 255;
                             }*/
-                            B = B < 0 ? 0 : B > 255 ? 255 : B;
+                            /*B = B < 0 ? 0 : B > 255 ? 255 : B;
                             lock (newImg)
                                 newImg.SetPixel(x + 1, y + 1, Color.FromArgb(A, R, G, B));
                         }
@@ -409,18 +409,6 @@ namespace TaskScheduler
             foreach (Thread t in threads)
                 t.Join();
             return newImg;
-        }
-
-        public void ReadXml(XmlReader reader)
-        {
-        }
-
-        public override void WriteXml(XmlWriter writer)
-        {
-            base.WriteXml(writer);
-            writer.WriteStartElement("Derived");
-            writer.WriteAttributeString("FolderOutput", ".");
-            writer.WriteEndElement();
-        }
+        }*/
     }
 }

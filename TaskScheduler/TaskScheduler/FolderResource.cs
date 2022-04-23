@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 
 namespace TaskScheduler
 {
+
+    [Serializable]
     public class FolderResource : Resource
     {
         private readonly string _path;

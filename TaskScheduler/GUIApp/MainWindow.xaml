@@ -11,7 +11,7 @@
             <StackPanel Height="35" Orientation="Horizontal" Margin="5 5 5 5">
                 <Label Content="Choose the task type" Margin="5 5 5 5" Width="200"/>
                 <ComboBox x:Name="taskTypeCB" Width="250" Height="25" Margin="5 5 5 5" IsReadOnly="True"/>
-                <Button x:Name="addTaskBtn" Content="Add Task" Width="150" Margin="50 5 5 5" Click="addTaskBtn_Click"/>
+                <Button x:Name="addTaskBtn" Content="Add Task" Width="150" Margin="50 5 5 5" Click="AddTaskBtn_Click"/>
             </StackPanel>
             <Separator Margin="5 5 5 5"/>
             <Label Content="Tasks" HorizontalAlignment="Center"/>

@@ -25,18 +25,34 @@ namespace GUIApp
             InitializeComponent();
             ResizeMode = ResizeMode.CanMinimize;
             coresCB.ItemsSource = Enumerable.Range(1, Environment.ProcessorCount);
+            CheckForLoad();
         }
 
-        private void startBtn_Click(object sender, RoutedEventArgs e)
+        private void CheckForLoad()
         {
-            int cores = 0, tasks = 0;
+            string folder = MainWindow.folderPath;
+            DirectoryInfo directoryInfo = new DirectoryInfo(folder);
+            foreach (var fileInfo in directoryInfo.GetFiles())
+                if (fileInfo.Name.StartsWith("TaskScheduler"))
+                {
+                    if (MessageBox.Show("A save file has been detected. Do you want to load data from it?", "Load", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) == MessageBoxResult.Yes)
+                    {
+                        MainWindow win = new();
+                        this.Hide();
+                        win.Show();
+                    }
+                }
+        }
+
+        private void StartBtn_Click(object sender, RoutedEventArgs e)
+        {
             if (coresCB.SelectedItem != null && maxNoConcurrentTasksTB.Text != ""
                 && (preemptiveRB.IsChecked == true || nonPeemptiveRB.IsChecked == true) && (priorityRB.IsChecked == true || nonPriorityRB.IsChecked == true))
             {
                 try
                 {
-                    cores = Int32.Parse(coresCB.SelectedItem.ToString());
-                    tasks = Int32.Parse(maxNoConcurrentTasksTB.Text.ToString());
+                    int cores = Int32.Parse(coresCB.SelectedItem.ToString());
+                    int tasks = Int32.Parse(maxNoConcurrentTasksTB.Text.ToString());
                     bool priority = (bool)priorityRB.IsChecked;
                     bool preemptive = (bool)preemptiveRB.IsChecked;
                     MainWindow win = new MainWindow(cores, tasks, priority, preemptive);

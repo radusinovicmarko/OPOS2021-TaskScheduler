@@ -10,7 +10,7 @@ using System.Xml.Serialization;
 namespace TaskScheduler
 {
     [Serializable]
-    public class Resource : IXmlSerializable
+    public class Resource
     {
         protected bool _locked = false;
 
@@ -44,7 +44,7 @@ namespace TaskScheduler
             return base.GetHashCode();
         }
 
-        public XmlSchema? GetSchema()
+        /*public XmlSchema? GetSchema()
         {
             return null;
         }
@@ -57,6 +57,6 @@ namespace TaskScheduler
         public void WriteXml(XmlWriter writer)
         {
             task?.WriteXml(writer);
-        }
+        }*/
     }
 }

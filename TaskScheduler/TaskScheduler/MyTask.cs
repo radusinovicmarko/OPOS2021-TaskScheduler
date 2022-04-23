@@ -14,7 +14,7 @@ using System.Xml;
 namespace TaskScheduler
 {
     [Serializable]
-    public class MyTask : IXmlSerializable
+    public class MyTask
     {
 
         public enum TaskState
@@ -149,9 +149,9 @@ namespace TaskScheduler
                     r.Unlock();
         }
 
-        public virtual void Serialize()
+        public virtual void Serialize(string folderPath)
         {
-            string fileName = this.GetType().AssemblyQualifiedName + "_" + DateTime.Now.Ticks + ".xml";
+            string fileName = folderPath + Path.DirectorySeparatorChar + this.GetType().Name + "_" + DateTime.Now.Ticks + ".bin";
 
             //XmlSerializer serializer = new XmlSerializer(typeof(MyTask));
             //using StreamWriter writer = new StreamWriter(fileName);
@@ -181,29 +181,9 @@ namespace TaskScheduler
             return (MyTask)formatter.Deserialize(stream);
         }
 
-        public XmlSchema? GetSchema()
+        /*public override string ToString()
         {
-            return null;
-        }
-
-        public void ReadXml(XmlReader reader)
-        {
-        }
-
-        public virtual void WriteXml(XmlWriter writer)
-        {
-            writer.WriteAttributeString("State", _state.ToString());
-            writer.WriteAttributeString("Deadline", _deadline.ToBinary().ToString());
-            writer.WriteAttributeString("MaxExecTime", _maxExecTime.ToString());
-            writer.WriteAttributeString("MaxDegreeOfParalellism", _maxDegreeOfParalellism.ToString());
-            writer.WriteAttributeString("TaskTerminated", _terminated.ToString());
-            writer.WriteAttributeString("Priority", _priority.ToString());
-            writer.WriteStartElement("ControlToken");
-            _controlToken?.WriteXml(writer);
-            writer.WriteEndElement();
-            writer.WriteStartElement("UserControlToken");
-            _userControlToken?.WriteXml(writer);
-            writer.WriteEndElement();
-        }
+            return "[" +((FileResource) Resources[0]).Path +  "]";
+        }*/
     }
 }

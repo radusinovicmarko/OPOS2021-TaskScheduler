@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.AccessControl;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Security.AccessControl;
 using DokanNet;
-using TaskScheduler;
 
 namespace UserSpaceFileSystem
 {
@@ -18,9 +12,9 @@ namespace UserSpaceFileSystem
             private string _name;
             private DateTime _created;
 
-            public File(string name, DateTime created, byte[] data)
+            public File(string name, DateTime created)
             {
-                _data = data;
+                _data = Array.Empty<byte>();
                 _name = name;
                 _created = created;
             }
@@ -35,36 +29,9 @@ namespace UserSpaceFileSystem
         private readonly Dictionary<string, File> inputFiles = new();
         private readonly Dictionary<string, File> outputFiles = new();
 
-        //private readonly Dictionary<string, bool> filesToBeProcessed = new();
-
-        //private readonly object _lock = new();
-
-        //private readonly TaskScheduler.TaskScheduler _taskScheduler;
-
         private readonly static int CAPACITY = 512 * 1024 * 1024;
         private int totalNumberOfBytes = CAPACITY;
         private int totalNumberOfFreeBytes = CAPACITY;
-
-        /*public FileSystem(TaskScheduler.TaskScheduler scheduler)
-        {
-            _taskScheduler = scheduler;
-            new Thread(() =>
-            {
-                while (true)
-                {
-                    lock (_lock)
-                    {
-                        Thread.Sleep(40000);
-                        foreach (string file in filesToBeProcessed.Keys)
-                            if (filesToBeProcessed[file])
-                            {
-                                scheduler.AddTask(new EdgeDetectionTask(new DateTime(2023, 2, 22, 0, 0, 0), 2000, 1, new ControlToken(), new ControlToken(), MyTask.TaskPriority.Normal, new FolderResource("V:\\output\\"), new FileResource("V:" + file)));
-                                filesToBeProcessed[file] = false;
-                            }
-                    }
-                }
-            });//.Start();
-        }*/
 
         public void Cleanup(string fileName, IDokanFileInfo info) { }
 
@@ -75,9 +42,9 @@ namespace UserSpaceFileSystem
             if (mode == FileMode.CreateNew)
             {
                 if (fileName.StartsWith(Path.DirectorySeparatorChar + "input" + Path.DirectorySeparatorChar) && !inputFiles.ContainsKey(fileName))
-                    inputFiles.Add(fileName, new File(fileName, DateTime.Now, Array.Empty<byte>()));
+                    inputFiles.Add(fileName, new File(fileName, DateTime.Now));
                 else if (fileName.StartsWith(Path.DirectorySeparatorChar + "output" + Path.DirectorySeparatorChar) && !outputFiles.ContainsKey(fileName))
-                    outputFiles.Add(fileName, new File(fileName, DateTime.Now, Array.Empty<byte>()));
+                    outputFiles.Add(fileName, new File(fileName, DateTime.Now));
             }
             return NtStatus.Success;
         }
@@ -144,12 +111,13 @@ namespace UserSpaceFileSystem
 
         public NtStatus FindStreams(string fileName, out IList<FileInformation> streams, IDokanFileInfo info)
         {
-            throw new NotImplementedException();
+            streams = Array.Empty<FileInformation>();
+            return NtStatus.NotImplemented;
         }
 
         public NtStatus FlushFileBuffers(string fileName, IDokanFileInfo info)
         {
-            throw new NotImplementedException();
+            return NtStatus.Success;
         }
 
         public NtStatus GetDiskFreeSpace(out long freeBytesAvailable, out long totalNumberOfBytes, out long totalNumberOfFreeBytes, IDokanFileInfo info)
@@ -170,7 +138,7 @@ namespace UserSpaceFileSystem
                     Attributes = FileAttributes.Directory
                 };
             }
-            else if (fileName == Path.DirectorySeparatorChar + "input")
+            else if (fileName == Path.DirectorySeparatorChar + "input" + Path.DirectorySeparatorChar)
             {
                 fileInfo = new()
                 {
@@ -178,7 +146,7 @@ namespace UserSpaceFileSystem
                     Attributes = FileAttributes.Directory
                 };
             }
-            else if (fileName == Path.DirectorySeparatorChar + "output")
+            else if (fileName == Path.DirectorySeparatorChar + "output" + Path.DirectorySeparatorChar)
             {
                 fileInfo = new()
                 {
@@ -231,12 +199,7 @@ namespace UserSpaceFileSystem
 
         public NtStatus LockFile(string fileName, long offset, long length, IDokanFileInfo info)
         {
-            throw new NotImplementedException();
-        }
-
-        public NtStatus Mounted(string mountPoint, IDokanFileInfo info)
-        {
-            throw new NotImplementedException();
+            return NtStatus.Error;
         }
 
         public NtStatus MoveFile(string oldName, string newName, bool replace, IDokanFileInfo info)
@@ -259,7 +222,7 @@ namespace UserSpaceFileSystem
 
         public NtStatus SetAllocationSize(string fileName, long length, IDokanFileInfo info)
         {
-            throw new NotImplementedException();
+            return NtStatus.Error;
         }
 
         public NtStatus SetEndOfFile(string fileName, long length, IDokanFileInfo info)
@@ -284,12 +247,12 @@ namespace UserSpaceFileSystem
 
         public NtStatus UnlockFile(string fileName, long offset, long length, IDokanFileInfo info)
         {
-            throw new NotImplementedException();
+            return NtStatus.Error;
         }
 
         public NtStatus Unmounted(IDokanFileInfo info)
         {
-            throw new NotImplementedException();
+            return NtStatus.Success;
         }
 
         public NtStatus WriteFile(string fileName, byte[] buffer, out int bytesWritten, long offset, IDokanFileInfo info)
@@ -320,14 +283,6 @@ namespace UserSpaceFileSystem
                 bytesWritten = buffer.Length;
             }
             totalNumberOfFreeBytes -= bytesWritten;
-
-            //_task = new EdgeDetectionTask(new DateTime(2023, 2, 22, 0, 0, 0), 2000, 1, new ControlToken(), new ControlToken(), MyTask.TaskPriority.Normal, new FolderResource("V:\\output\\"), new FileResource("V:\\" + fileName));
-            /*if (!filesToBeProcessed.ContainsKey(fileName))
-            {
-                filesToBeProcessed.Add(fileName, true);
-                //lock (_lock)
-                  //Monitor.PulseAll(_lock);
-            }*/
             return NtStatus.Success;
         }
 
