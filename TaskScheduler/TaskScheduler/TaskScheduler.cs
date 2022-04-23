@@ -24,7 +24,7 @@ namespace TaskScheduler
         [NonSerialized]
         private Dictionary<MyTask, Stopwatch> _stopwatches = new();
 
-        private readonly Dictionary<MyTask, double> _elapsedTime = new();
+        private readonly Dictionary<string, double> _elapsedTime = new();
 
         private readonly Dictionary<MyTask, List<Resource>> _resourcesTaken = new();
 
@@ -273,7 +273,7 @@ namespace TaskScheduler
 
             _elapsedTime.Clear();
             foreach (var task in _stopwatches.Keys)
-                _elapsedTime.Add(task, _stopwatches[task].Elapsed.TotalSeconds);
+                _elapsedTime.Add(task.Id, (long)_stopwatches[task].Elapsed.TotalSeconds);
 
             IFormatter formatter = new BinaryFormatter();
             using Stream stream = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
@@ -285,27 +285,15 @@ namespace TaskScheduler
             IFormatter formatter = new BinaryFormatter();
             using Stream stream = new FileStream(fileName, FileMode.Open);
             TaskScheduler scheduler = (TaskScheduler)formatter.Deserialize(stream);
+
             Process.GetCurrentProcess().ProcessorAffinity = GetProcessorAffinity(scheduler._maxNumberOfCores);
+
             scheduler._started = false;
             scheduler._coresTaken = 0;
             scheduler._runningTasks2 = new();
             scheduler._stopwatches = new();
             scheduler._resourcesTaken2.Clear();
             scheduler._scheduledTasks = new(new MyTaskComparer());
-
-            /*foreach (var task in scheduler._runningTasks2.Keys)
-            {
-                task.State = MyTask.TaskState.Ready;    
-                scheduler.AddTask(task);
-            }*/
-
-            /*foreach (var file in Directory.GetFiles(tasksFolder))
-            {
-                string name = Path.GetFileName(file);
-                string type = name.Substring(0, name.IndexOf('_'));
-                MyTask task = (MyTask)Type.GetType(type).GetMethod("Deserialize").Invoke(null, new object[] { file });
-                scheduler.AddTask(task);
-            }*/
 
             return scheduler;
         }
@@ -318,18 +306,16 @@ namespace TaskScheduler
                 {
                     if (task.ControlToken != null)
                     {
+                        double previousElapsedTime = 0;
+                        if (_elapsedTime.ContainsKey(task.Id))
+                            previousElapsedTime = _elapsedTime[task.Id];
                         _stopwatches.TryGetValue(task, out Stopwatch? stopwatch);
-                        if (stopwatch?.Elapsed.TotalSeconds >= task.MaxExecTime || DateTime.Now >= task.Deadline)
+                        if (stopwatch?.Elapsed.TotalSeconds + previousElapsedTime >= task.MaxExecTime || DateTime.Now >= task.Deadline)
                             task.ControlToken?.Terminate();
                     }
                 }
                 Thread.Sleep(1000);
             }
-        }
-
-        public override string ToString()
-        {
-            return _resourcesTaken2.Count + "\n" + _runningTasks2.Count;
         }
 
         /*private void ThreadCoreExecution(int i)

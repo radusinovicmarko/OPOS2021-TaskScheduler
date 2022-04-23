@@ -42,6 +42,7 @@ namespace TaskScheduler
         [NonSerialized]
         protected Action? _finishedTaskCallback;
 
+        protected readonly string _id;
         protected readonly DateTime _deadline;
         protected readonly double _maxExecTime;
         protected int _maxDegreeOfParalellism;
@@ -69,6 +70,7 @@ namespace TaskScheduler
 
         public TaskPriority Priority { get { return _priority; } set { _priority = value; } }
 
+        public string Id => _id;
         public DateTime Deadline => _deadline;
 
         public double MaxExecTime => _maxExecTime;
@@ -97,8 +99,9 @@ namespace TaskScheduler
             //_resourcesProcessed = new List<bool>();
         }
 
-        public MyTask(Action action, DateTime deadline, double maxExecTime, int maxDegreeOfParalellism = 1, ControlToken? token = null, ControlToken? userToken = null, TaskPriority priority = TaskPriority.Normal)
+        public MyTask(Action action, string id, DateTime deadline, double maxExecTime, int maxDegreeOfParalellism = 1, ControlToken? token = null, ControlToken? userToken = null, TaskPriority priority = TaskPriority.Normal)
         {
+            _id = id;
             _state = TaskState.Ready;
             _action = action;
             _deadline = deadline;
@@ -109,8 +112,9 @@ namespace TaskScheduler
             _userControlToken = userToken;
         }
 
-        public MyTask(Action action, DateTime deadline, double maxExecTime, int maxDegreeOfParalellism = 1, TaskPriority priority = TaskPriority.Normal)
+        public MyTask(Action action, string id, DateTime deadline, double maxExecTime, int maxDegreeOfParalellism = 1, TaskPriority priority = TaskPriority.Normal)
         {
+            _id = id;
             _state = TaskState.Ready;
             _action = action;
             _deadline = deadline;
@@ -121,8 +125,9 @@ namespace TaskScheduler
             _userControlToken = null;
         }
 
-        public MyTask(Action action, DateTime deadline, double maxExecTime, int maxDegreeOfParalellism, ControlToken? token, ControlToken? userToken, TaskPriority priority, params Resource[] resources)
+        public MyTask(Action action, string id, DateTime deadline, double maxExecTime, int maxDegreeOfParalellism, ControlToken? token, ControlToken? userToken, TaskPriority priority, params Resource[] resources)
         {
+            _id = id;
             _state = TaskState.Ready;
             _action = action;
             _deadline = deadline;

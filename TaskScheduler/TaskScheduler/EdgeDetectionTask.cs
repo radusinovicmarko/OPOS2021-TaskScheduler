@@ -31,8 +31,8 @@ namespace TaskScheduler
             outputFolder = new FolderResource(".");
         }
 
-        public EdgeDetectionTask(DateTime deadline, double maxExecTime, int maxDegreeOfParalellism, ControlToken? token, ControlToken? userToken, TaskPriority priority, FolderResource output, params Resource[] resources) 
-            : base(null, deadline, maxExecTime, maxDegreeOfParalellism, token, userToken, priority, resources)
+        public EdgeDetectionTask(string id, DateTime deadline, double maxExecTime, int maxDegreeOfParalellism, ControlToken? token, ControlToken? userToken, TaskPriority priority, FolderResource output, params Resource[] resources) 
+            : base(null, id, deadline, maxExecTime, maxDegreeOfParalellism, token, userToken, priority, resources)
         {
             if (resources.Length == 0)
                 throw new ArgumentException("At least one resource image must be specified.");

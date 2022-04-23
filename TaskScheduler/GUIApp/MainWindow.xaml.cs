@@ -137,7 +137,7 @@ namespace GUIApp
             }
 
             StackPanel stackPanel = new() { Orientation = Orientation.Horizontal };
-            stackPanel.Children.Add(new Label() { Content = task.ToString() });
+            stackPanel.Children.Add(new Label() { Content = "Task  ID " + task.Id });
 
             Button removeBtn = new() { Content = "Remove", Margin = new Thickness(15, 0, 0, 0), IsEnabled = true, Width = 50 };
             removeBtn.Click += new RoutedEventHandler((sender, e) => tasksStackPanel.Children.Remove(stackPanel));

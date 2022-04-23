@@ -76,7 +76,8 @@ namespace GUIApp
             foreach (string item in resourcesLB.Items)
                 resources.Add(new FileResource(item));
             ControlToken? controlToken = preemptiveScheduling ? new() : null;
-            task = new EdgeDetectionTask((DateTime)deadlineDTP.Value, maxExecTime, maxDegreeOfParallelism, controlToken, new ControlToken(), priority, new FolderResource(outputFolderLbl.Content.ToString()), resources.ToArray());
+            string id = new Random().Next().ToString();
+            task = new EdgeDetectionTask(id, (DateTime)deadlineDTP.Value, maxExecTime, maxDegreeOfParallelism, controlToken, new ControlToken(), priority, new FolderResource(outputFolderLbl.Content.ToString()), resources.ToArray());
             this.Hide();
         }
     }
