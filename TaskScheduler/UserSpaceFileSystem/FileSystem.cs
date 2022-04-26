@@ -138,7 +138,7 @@ namespace UserSpaceFileSystem
                     Attributes = FileAttributes.Directory
                 };
             }
-            else if (fileName == Path.DirectorySeparatorChar + "input" + Path.DirectorySeparatorChar)
+            else if (fileName == Path.DirectorySeparatorChar + "input")
             {
                 fileInfo = new()
                 {
@@ -146,12 +146,13 @@ namespace UserSpaceFileSystem
                     Attributes = FileAttributes.Directory
                 };
             }
-            else if (fileName == Path.DirectorySeparatorChar + "output" + Path.DirectorySeparatorChar)
+            else if (fileName == Path.DirectorySeparatorChar + "output")
             {
                 fileInfo = new()
                 {
                     FileName = "output",
-                    Attributes = FileAttributes.Directory
+                    Attributes = FileAttributes.Directory,
+                    
                 };
             }
             else if (fileName.StartsWith(Path.DirectorySeparatorChar + "input") && inputFiles.ContainsKey(fileName))
@@ -260,14 +261,14 @@ namespace UserSpaceFileSystem
             File? file = null;
             if (fileName.StartsWith(Path.DirectorySeparatorChar + "input"))
             {
-                //if (!inputFiles.ContainsKey(fileName))
-                    //inputFiles.Add(fileName, new File(fileName, DateTime.Now, Array.Empty<byte>()));
+                if (!inputFiles.ContainsKey(fileName))
+                    inputFiles.Add(fileName, new File(fileName, DateTime.Now));
                 file = inputFiles[fileName];
             }
             else if (fileName.StartsWith(Path.DirectorySeparatorChar + "output"))
             {
-                //if (!outputFiles.ContainsKey(fileName))
-                    //outputFiles.Add(fileName, new File(fileName, DateTime.Now, Array.Empty<byte>()));
+                if (!outputFiles.ContainsKey(fileName))
+                    outputFiles.Add(fileName, new File(fileName, DateTime.Now));
                 file = outputFiles[fileName];
             }
             if (info.WriteToEndOfFile)

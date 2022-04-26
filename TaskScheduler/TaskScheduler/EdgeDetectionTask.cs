@@ -50,7 +50,7 @@ namespace TaskScheduler
                 string resourcePath = ((FileResource)_resources.ElementAt(0)).Path;
                 Bitmap originalImage = (Bitmap)Bitmap.FromFile(resourcePath);
                 maxHeight = originalImage.Height;
-                Bitmap? newImage = EdgeDetectionAlgorithm(originalImage, MaxDegreeOfParalellism);
+                Bitmap? newImage = UnsafeEdgeDetectionAlgorithm(originalImage, MaxDegreeOfParalellism);
                 string resName = resourcePath.Substring(resourcePath.LastIndexOf(Path.DirectorySeparatorChar) + 1);
                 string outputPath = Path.Combine(outputFolder.Path, "EdgeDetection_" + resName);
                 newImage?.Save(outputPath);
@@ -72,7 +72,7 @@ namespace TaskScheduler
                      if (!_resourcesProcessed[i])
                      {
                          string resourcePath = ((FileResource)_resources.ElementAt(i)).Path;
-                         Bitmap? newImage = EdgeDetectionAlgorithm((Bitmap)Bitmap.FromFile(resourcePath), 1);
+                         Bitmap? newImage = UnsafeEdgeDetectionAlgorithm((Bitmap)Bitmap.FromFile(resourcePath), 1);
                          string resName = resourcePath.Substring(resourcePath.LastIndexOf(Path.DirectorySeparatorChar) + 1);
                          string outputPath = Path.Combine(outputFolder.Path, "EdgeDetection_" + resName);
                          newImage?.Save(outputPath);
@@ -184,86 +184,118 @@ namespace TaskScheduler
             return ControlToken != null ? ControlToken.Terminated ? null : newImg : newImg;
         }
 
-        private Bitmap? UnsafeEdgeDetectionAlgorithm(Bitmap clone, int degree)
+        private Bitmap? UnsafeEdgeDetectionAlgorithm(Bitmap original, int degree)
         {
-            Bitmap newImg = (Bitmap)clone.Clone();
-            BitmapData bmd = newImg.LockBits(new Rectangle(0, 0, newImg.Width, newImg.Height),ImageLockMode.ReadWrite, newImg.PixelFormat);
-            int PixelSize = 4;
+            Bitmap bSrc = (Bitmap)original.Clone();
+            BitmapData bmData = original.LockBits(new Rectangle(0, 0, original.Width, original.Height), 
+                               ImageLockMode.ReadWrite, original.PixelFormat);
+            BitmapData bmSrc = bSrc.LockBits(new Rectangle(0, 0, bSrc.Width, bSrc.Height),
+                               ImageLockMode.ReadWrite, bSrc.PixelFormat);
+            int stride = bmData.Stride;
+            int stride2 = stride * 2;
 
-            unsafe
-            {
-                for (int y = 0; y < bmd.Height - 2; y++)
+            System.IntPtr Scan0 = bmData.Scan0;
+            System.IntPtr SrcScan0 = bmSrc.Scan0;
+
+            //unsafe
+            //{
+                //byte* p = (byte*)(void*)Scan0;
+                //byte* pSrc = (byte*)(void*)SrcScan0;
+                int bytesPerPixel = Image.GetPixelFormatSize(original.PixelFormat) / 8;
+                int nOffset = stride - original.Width * bytesPerPixel;
+                int nWidth = original.Width - 2;
+                int nHeight = original.Height - 2;
+
+                //int nPixel;
+
+                Parallel.For(0, nHeight, new ParallelOptions() { MaxDegreeOfParallelism = degree }, y =>
+                //for (int y = 0; y < nHeight; y++)
                 {
-                    byte* row = (byte*)bmd.Scan0 + (y * bmd.Stride);
-                    byte* row1 = (byte*)bmd.Scan0 + ((y + 1) * bmd.Stride);
-                    byte* row2 = (byte*)bmd.Scan0 + ((y + 2) * bmd.Stride);
-                    Color[,] pixelColor = new Color[3, 3];
-                    //int y = i;
-                    int A, R, G, B;
-                    Bitmap b;
-                    for (int x = 0; x < bmd.Width - 2; x++)
+                    //Check for Pause/Terminate
+                    if ((_controlToken != null && _controlToken.Terminated) || (_userControlToken != null && _userControlToken.Terminated))
+                        return;
+                    if (_controlToken != null && _controlToken.Paused)
                     {
-
-                        /*B = row[x * PixelSize] = 0;   //Blue  0-255
-                        G = row[x * PixelSize + 1] = 255; //Green 0-255
-                        R = row[x * PixelSize + 2] = 0;   //Red   0-255*/
-                        A = row[x * PixelSize + 3] = 50;  //Alpha 0-255
-
-                        /* pixelColor[0, 0] = b.GetPixel(x, y);
-                    pixelColor[0, 1] = b.GetPixel(x, y + 1);
-                    pixelColor[0, 2] = b.GetPixel(x, y + 2);
-                    pixelColor[1, 0] = b.GetPixel(x + 1, y);
-                    pixelColor[1, 1] = b.GetPixel(x + 1, y + 1);
-                    pixelColor[1, 2] = b.GetPixel(x + 1, y + 2);
-                    pixelColor[2, 0] = b.GetPixel(x + 2, y);
-                    pixelColor[2, 1] = b.GetPixel(x + 2, y + 1);
-                    pixelColor[2, 2] = b.GetPixel(x + 2, y + 2);*/
-                        R = (int)(row[x * PixelSize + 1] * edgeDetectionKernel[0, 0]) +
-                                 (row[(x + 1) * PixelSize + 1] * edgeDetectionKernel[1, 0]) +
-                                 (row[(x + 2) * PixelSize + 1] * edgeDetectionKernel[2, 0]) +
-                                 (row1[x * PixelSize + 1] * edgeDetectionKernel[0, 1]) +
-                                 (row1[(x + 1) * PixelSize + 1] * edgeDetectionKernel[1, 1]) +
-                                 (row1[(x + 2) * PixelSize + 1] * edgeDetectionKernel[2, 1]) +
-                                 (row2[x * PixelSize + 1] * edgeDetectionKernel[0, 2]) +
-                                 (row2[(x + 1) * PixelSize + 1]  * edgeDetectionKernel[1, 2]) +
-                                 (row2[(x + 2) * PixelSize + 1] * edgeDetectionKernel[2, 2]);
-
-                        R = R < 0 ? 0 : R > 255 ? 255 : R;
-
-                        G = (int)(row[x * PixelSize + 2] * edgeDetectionKernel[0, 0]) +
-                                 (row[(x + 1) * PixelSize + 2] * edgeDetectionKernel[1, 0]) +
-                                 (row[(x + 2) * PixelSize + 2] * edgeDetectionKernel[2, 0]) +
-                                 (row1[x * PixelSize + 2] * edgeDetectionKernel[0, 1]) +
-                                 (row1[(x + 1) * PixelSize + 2] * edgeDetectionKernel[1, 1]) +
-                                 (row1[(x + 2) * PixelSize + 2] * edgeDetectionKernel[2, 1]) +
-                                 (row2[x * PixelSize + 2] * edgeDetectionKernel[0, 2]) +
-                                 (row2[(x + 1) * PixelSize + 2] * edgeDetectionKernel[1, 2]) +
-                                 (row2[(x + 2) * PixelSize + 2] * edgeDetectionKernel[2, 2]);
-
-                        G = G < 0 ? 0 : G > 255 ? 255 : G;
-
-                        B = (int)(row[x * PixelSize + 3] * edgeDetectionKernel[0, 0]) +
-                                 (row[(x + 1) * PixelSize + 3] * edgeDetectionKernel[1, 0]) +
-                                 (row[(x + 2) * PixelSize + 3] * edgeDetectionKernel[2, 0]) +
-                                 (row1[x * PixelSize + 3] * edgeDetectionKernel[0, 1]) +
-                                 (row1[(x + 1) * PixelSize + 3] * edgeDetectionKernel[1, 1]) +
-                                 (row1[(x + 2) * PixelSize + 3] * edgeDetectionKernel[2, 1]) +
-                                 (row2[x * PixelSize + 3] * edgeDetectionKernel[0, 2]) +
-                                 (row2[(x + 1) * PixelSize + 3] * edgeDetectionKernel[1, 2]) +
-                                 (row2[(x + 2) * PixelSize + 3] * edgeDetectionKernel[2, 2]);
-                        B = B < 0 ? 0 : B > 255 ? 255 : B;
-
-                        row1[(x + 1) * PixelSize] = (byte)B;
-                        row1[(x + 1) * PixelSize + 1] = (byte)G;
-                        row1[(x + 1) * PixelSize + 2] = (byte)R;
-                        row1[(x + 1) * PixelSize + 3] = (byte)A;
+                        lock (_controlToken.Lock)
+                            Monitor.Wait(_controlToken.Lock);
                     }
-                }
-            }
+                    if (_userControlToken != null && _userControlToken.Paused)
+                    {
+                        lock (_userControlToken.Lock)
+                            Monitor.Wait(_userControlToken.Lock);
+                    }
+                    unsafe
+                    {
+                        byte* p = (byte*)(void*)Scan0 + y * (nOffset + nWidth * bytesPerPixel);
+                        byte* pSrc = (byte*)(void*)SrcScan0 + y * (nOffset + nWidth * bytesPerPixel);
+                        for (int x = 0; x < nWidth; x++)
+                        {
+                            int nPixelR = (pSrc[2] * edgeDetectionKernel[0, 0]) +
+                                (pSrc[5] * edgeDetectionKernel[0, 1]) +
+                                (pSrc[8] * edgeDetectionKernel[0, 2]) +
+                                (pSrc[2 + stride] * edgeDetectionKernel[1, 0]) +
+                                (pSrc[5 + stride] * edgeDetectionKernel[1, 1]) +
+                                (pSrc[8 + stride] * edgeDetectionKernel[1, 2]) +
+                                (pSrc[2 + stride2] * edgeDetectionKernel[2, 0]) +
+                                (pSrc[5 + stride2] * edgeDetectionKernel[2, 1]) +
+                                (pSrc[8 + stride2] * edgeDetectionKernel[2, 2]);
 
-            newImg.UnlockBits(bmd);
-            return newImg;
-            //bmp.Save("test.png", ImageFormat.Png);
+                            if (nPixelR < 0) nPixelR = 0;
+                            if (nPixelR > 255) nPixelR = 255;
+                            p[5 + stride] = (byte)nPixelR;
+
+                            int nPixelG = (pSrc[1] * edgeDetectionKernel[0, 0]) +
+                                (pSrc[4] * edgeDetectionKernel[0, 1]) +
+                                (pSrc[7] * edgeDetectionKernel[0, 2]) +
+                                (pSrc[1 + stride] * edgeDetectionKernel[1, 0]) +
+                                (pSrc[4 + stride] * edgeDetectionKernel[1, 1]) +
+                                (pSrc[7 + stride] * edgeDetectionKernel[1, 2]) +
+                                (pSrc[1 + stride2] * edgeDetectionKernel[2, 0]) +
+                                (pSrc[4 + stride2] * edgeDetectionKernel[2, 1]) +
+                                (pSrc[7 + stride2] * edgeDetectionKernel[2, 2]);
+
+                            if (nPixelG < 0) nPixelG = 0;
+                            if (nPixelG > 255) nPixelG = 255;
+                            p[4 + stride] = (byte)nPixelG;
+
+                            int nPixelB = (pSrc[0] * edgeDetectionKernel[0, 0]) +
+                                           (pSrc[3] * edgeDetectionKernel[0, 1]) +
+                                           (pSrc[6] * edgeDetectionKernel[0, 2]) +
+                                           (pSrc[0 + stride] * edgeDetectionKernel[1, 0]) +
+                                           (pSrc[3 + stride] * edgeDetectionKernel[1, 1]) +
+                                           (pSrc[6 + stride] * edgeDetectionKernel[1, 2]) +
+                                           (pSrc[0 + stride2] * edgeDetectionKernel[2, 0]) +
+                                           (pSrc[3 + stride2] * edgeDetectionKernel[2, 1]) +
+                                           (pSrc[6 + stride2] * edgeDetectionKernel[2, 2]);
+
+                            if (nPixelB < 0) nPixelB = 0;
+                            if (nPixelB > 255) nPixelB = 255;
+                            p[3 + stride] = (byte)nPixelB;
+
+                            //lock (this)
+                            //{
+                                //p[5 + stride] = (byte)nPixelR;
+                                //p[4 + stride] = (byte)nPixelG;
+                                //p[3 + stride] = (byte)nPixelB;
+                            //}
+
+                            p += bytesPerPixel;
+                            pSrc += bytesPerPixel;
+                        }
+                    }
+                    lock (this)
+                    {
+                        noRows++;
+                        _progress = (double)noRows / maxHeight;
+                    }
+                    if (_progressBarUpdateAction != null)
+                        _progressBarUpdateAction.Invoke();
+                });
+            //}
+
+            original.UnlockBits(bmData);
+            bSrc.UnlockBits(bmSrc);
+            return original;
         }
 
         public override void Serialize(string folderPath)

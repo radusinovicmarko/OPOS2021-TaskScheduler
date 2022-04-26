@@ -54,11 +54,16 @@ namespace GUIApp
                 resourcesLB.Items.Add(fileDialog.FileName);
         }
 
-        private void addOutputFolderBtn_Click(object sender, RoutedEventArgs e)
+        private void AddOutputFolderBtn_Click(object sender, RoutedEventArgs e)
         {
             VistaFolderBrowserDialog dialog = new();
             if (dialog.ShowDialog() == true)
                 outputFolderLbl.Content = dialog.SelectedPath;
+        }
+
+        private void ResourcesLB_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            resourcesLB.Items.Remove(resourcesLB.SelectedItem);
         }
 
         private void AddTaskBtn_Click(object sender, RoutedEventArgs e)

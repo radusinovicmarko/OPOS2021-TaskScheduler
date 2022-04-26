@@ -44,7 +44,7 @@ namespace GUIApp
             InitializeComponent();
             Init();
             Load();
-            new Thread(Autosave) { IsBackground = true };//.Start();
+            new Thread(Autosave) { IsBackground = true }.Start();
         }
 
         public MainWindow(int cores, int concTasks, bool priority, bool preemptive)
@@ -57,7 +57,7 @@ namespace GUIApp
             scheduler = new TaskScheduler.TaskScheduler(cores, concTasks, preemptiveScheduling, priorityScheduling);
             tasksStackPanel = tasksSP;
             scheduler.Start();
-            new Thread(Autosave) { IsBackground = true };//.Start();
+            new Thread(Autosave) { IsBackground = true }.Start();
         }
 
         private void Init()
@@ -137,14 +137,14 @@ namespace GUIApp
             }
 
             StackPanel stackPanel = new() { Orientation = Orientation.Horizontal };
-            stackPanel.Children.Add(new Label() { Content = "Task  ID " + task.Id });
+            stackPanel.Children.Add(new Label() { Content = "Task  ID " + task.Id, Width = 150 });
 
             Button removeBtn = new() { Content = "Remove", Margin = new Thickness(15, 0, 0, 0), IsEnabled = true, Width = 50 };
             removeBtn.Click += new RoutedEventHandler((sender, e) => tasksStackPanel.Children.Remove(stackPanel));
 
             task.FinishedTaskCallback = () => this.Dispatcher.Invoke(() => removeBtn.IsEnabled = true);
 
-            ProgressBar pb = new() { Orientation = Orientation.Horizontal, Width = 175, Margin = new Thickness(5, 0, 0, 0), Maximum = 1.0 };
+            ProgressBar pb = new() { Orientation = Orientation.Horizontal, Width = 200, Margin = new Thickness(5, 0, 0, 0), Maximum = 1.0 };
             stackPanel.Children.Add(pb);
             task.ProgressBarUpdateAction = () =>
             {

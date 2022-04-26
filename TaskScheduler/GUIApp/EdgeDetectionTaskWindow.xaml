@@ -33,11 +33,11 @@
                     <Label Content="Resources: " Width="200"/>
                     <Button x:Name="addResourceBtn" Content="Add Resource" Width="150" Margin="5 5 5 5" Click="addResourceBtn_Click"/>
                 </StackPanel>
-                <ListBox x:Name="resourcesLB" Height="82" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="5 5 5 5"/>
+                <ListBox x:Name="resourcesLB" Height="82" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="5 5 5 5" MouseDoubleClick="ResourcesLB_MouseDoubleClick"/>
             </StackPanel>
             <StackPanel Height="35" Orientation="Horizontal" Margin="0 5 0 0">
                 <Label Content="OutputFolder: " Width="200"/>
-                <Button x:Name="addOutputFolderBtn" Content="Add Output Folder" Width="150" Margin="5 5 5 5" Click="addOutputFolderBtn_Click" />
+                <Button x:Name="addOutputFolderBtn" Content="Add Output Folder" Width="150" Margin="5 5 5 5" Click="AddOutputFolderBtn_Click" />
             </StackPanel>
             <StackPanel Height="35" Orientation="Horizontal" Margin="0 5 0 0">
                 <Label x:Name="outputFolderLbl" Width="150" Margin="205 5 5 5"/>
