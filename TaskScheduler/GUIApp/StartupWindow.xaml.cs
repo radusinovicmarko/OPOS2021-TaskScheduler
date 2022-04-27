@@ -31,7 +31,7 @@ namespace GUIApp
         private void CheckForLoad()
         {
             string folder = MainWindow.folderPath;
-            DirectoryInfo directoryInfo = new DirectoryInfo(folder);
+            DirectoryInfo directoryInfo = new(folder);
             foreach (var fileInfo in directoryInfo.GetFiles())
                 if (fileInfo.Name.StartsWith("TaskScheduler"))
                 {
@@ -55,13 +55,13 @@ namespace GUIApp
                     int tasks = Int32.Parse(maxNoConcurrentTasksTB.Text.ToString());
                     bool priority = (bool)priorityRB.IsChecked;
                     bool preemptive = (bool)preemptiveRB.IsChecked;
-                    MainWindow win = new MainWindow(cores, tasks, priority, preemptive);
+                    MainWindow win = new(cores, tasks, priority, preemptive);
                     this.Hide();
                     win.Show();
                     
-                } catch
+                } catch (Exception ex)
                 {
-                    MessageBox.Show("Invalid parameters.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
             else

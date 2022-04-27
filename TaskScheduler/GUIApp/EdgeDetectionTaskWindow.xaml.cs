@@ -24,11 +24,11 @@ namespace GUIApp
     public partial class EdgeDetectionTaskWindow : Window
     {
 
-        private DateTimePicker deadlineDTP = new DateTimePicker() { Width = 250, Margin = new Thickness(5, 5, 5, 5) };
+        private readonly DateTimePicker deadlineDTP = new() { Width = 250, Margin = new Thickness(5, 5, 5, 5) };
 
         private EdgeDetectionTask? task;
-
-        private bool priorityScheduling, preemptiveScheduling;
+        private readonly bool priorityScheduling;
+        private readonly bool preemptiveScheduling;
 
         public EdgeDetectionTask? Task { get { return task; } set { task = value;} }
 
@@ -40,16 +40,14 @@ namespace GUIApp
             deadlineSP.Children.Add(deadlineDTP);
             ResizeMode = ResizeMode.CanMinimize;
             priorityCB.ItemsSource = Enum.GetValues(typeof(MyTask.TaskPriority));
+            priorityCB.SelectedItem = MyTask.TaskPriority.Normal;
             if (!this.priorityScheduling)
-            {
-                priorityCB.SelectedItem = MyTask.TaskPriority.Normal;
                 priorityCB.IsEnabled = false;
-            }
         }
 
-        private void addResourceBtn_Click(object sender, RoutedEventArgs e)
+        private void AddResourceBtn_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog fileDialog = new OpenFileDialog();
+            OpenFileDialog fileDialog = new();
             if (fileDialog.ShowDialog() == true)
                 resourcesLB.Items.Add(fileDialog.FileName);
         }
@@ -68,21 +66,48 @@ namespace GUIApp
 
         private void AddTaskBtn_Click(object sender, RoutedEventArgs e)
         {
+            bool valid = true;
+            if (deadlineDTP.Value == null)
+            {
+                System.Windows.MessageBox.Show("Invalid parameter: Deadline.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                valid = false;
+            }
             if (!Double.TryParse(maxExecTimeTB.Text, out double maxExecTime))
-                System.Windows.MessageBox.Show("...");
+            {
+                System.Windows.MessageBox.Show("Invalid parameter: Maximum Execution Time.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                valid = false;
+            }
             if (!Int32.TryParse(maxDegreeOfParallelismTB.Text, out int maxDegreeOfParallelism))
-                System.Windows.MessageBox.Show("...");
-            MyTask.TaskPriority priority;
-            if (!Enum.TryParse(priorityCB.SelectedItem.ToString(), out priority))
-                System.Windows.MessageBox.Show("...");
+            {
+                System.Windows.MessageBox.Show("Invalid parameter Maximum Degree Of Parallelism.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                valid = false;
+            }
+            if (!Enum.TryParse(priorityCB.SelectedItem.ToString(), out MyTask.TaskPriority priority))
+            {
+                System.Windows.MessageBox.Show("Invalid parameter: Priority.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                valid = false;
+            }
             if (outputFolderLbl.Content == null || outputFolderLbl.Content.Equals(""))
-                System.Windows.MessageBox.Show("...");
-            List<Resource> resources = new List<Resource>();
+            {
+                System.Windows.MessageBox.Show("Invalid parameter: Output Folder.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                valid = false;
+            }
+            if (!valid)
+                return;
+            List<Resource> resources = new();
             foreach (string item in resourcesLB.Items)
                 resources.Add(new FileResource(item));
             ControlToken? controlToken = preemptiveScheduling ? new() : null;
             string id = new Random().Next().ToString();
-            task = new EdgeDetectionTask(id, (DateTime)deadlineDTP.Value, maxExecTime, maxDegreeOfParallelism, controlToken, new ControlToken(), priority, outputFolderLbl.Content.ToString(), resources.ToArray());
+            try
+            {
+                task = new EdgeDetectionTask(id, (DateTime)deadlineDTP.Value, maxExecTime, maxDegreeOfParallelism, controlToken, new ControlToken(), priority, outputFolderLbl.Content.ToString(), resources.ToArray());
+            } catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                task = null;
+                return;
+            }
             this.Hide();
         }
     }

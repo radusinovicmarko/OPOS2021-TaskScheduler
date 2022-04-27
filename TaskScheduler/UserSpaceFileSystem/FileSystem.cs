@@ -30,7 +30,7 @@ namespace UserSpaceFileSystem
         private readonly Dictionary<string, File> outputFiles = new();
 
         private readonly static int CAPACITY = 512 * 1024 * 1024;
-        private int totalNumberOfBytes = CAPACITY;
+        private readonly int totalNumberOfBytes = CAPACITY;
         private int totalNumberOfFreeBytes = CAPACITY;
 
         public void Cleanup(string fileName, IDokanFileInfo info) { }

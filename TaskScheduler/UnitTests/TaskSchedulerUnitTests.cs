@@ -173,7 +173,7 @@ namespace UnitTests
         {
             DeleteFiles(output);
             TaskScheduler.TaskScheduler scheduler = new(4, 10);
-            ControlToken token = new ControlToken();
+            ControlToken token = new();
             MyTask task1 = new EdgeDetectionTask("", new DateTime(2023, 2, 22, 0, 0, 0), 20, 1, new ControlToken(), token, MyTask.TaskPriority.Normal, output, new FileResource(path + "test.jpg"), new FileResource(path + "test3.jpg"));
             MyTask task2 = new EdgeDetectionTask("", new DateTime(2023, 2, 22, 0, 0, 0), 20, 1, new ControlToken(), new ControlToken(), MyTask.TaskPriority.Normal, output, new FileResource(path + "test2.jpg"), new FileResource(path + "test3.jpg"));
             MyTask task3 = new EdgeDetectionTask("", new DateTime(2023, 2, 22, 0, 0, 0), 20, 1, new ControlToken(), new ControlToken(), MyTask.TaskPriority.Normal, output, new FileResource(path + "test.jpg"), new FileResource(path + "test2.jpg"));

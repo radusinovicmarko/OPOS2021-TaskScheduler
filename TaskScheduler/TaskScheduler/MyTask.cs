@@ -55,7 +55,6 @@ namespace TaskScheduler
 
         protected double _progress = 0.0;
 
-        //ReadWriteLock
         protected List<Resource>? _resources = null;
 
         protected List<bool>? _resourcesProcessed = null;
@@ -79,16 +78,10 @@ namespace TaskScheduler
 
         public DateTime DateTimeFinished { get { return dateTimeFinished; } set { dateTimeFinished = value; } }
 
-        [XmlIgnore]
-        [JsonIgnore]
         public Action Action { get { return _action; } protected set { _action = value; } }
 
-        [XmlIgnore]
-        [JsonIgnore]
         public Action? ProgressBarUpdateAction { get { return _progressBarUpdateAction; } set { _progressBarUpdateAction = value; } }
 
-        [XmlIgnore]
-        [JsonIgnore]
         public Action? FinishedTaskCallback { get { return _finishedTaskCallback; } set { _finishedTaskCallback = value; } }
 
         public double Progress { get { return _progress; } protected set { _progress = value; } }
@@ -163,13 +156,6 @@ namespace TaskScheduler
         {
             string fileName = folderPath + Path.DirectorySeparatorChar + this.GetType().Name + "_" + DateTime.Now.Ticks + ".bin";
 
-            //XmlSerializer serializer = new XmlSerializer(typeof(MyTask));
-            //using StreamWriter writer = new StreamWriter(fileName);
-            //serializer.Serialize(writer, this);
-            
-            //string jsonString = JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
-            //File.WriteAllText(fileName, jsonString);
-
             IFormatter formatter = new BinaryFormatter();
             using Stream stream = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
             formatter.Serialize(stream, this);
@@ -177,23 +163,9 @@ namespace TaskScheduler
 
         public static MyTask? Deserialize(string fileName)
         {
-            //XmlSerializer serializer = new XmlSerializer(typeof(MyTask));
-            //using FileStream stream = new FileStream(fileName, FileMode.Open);
-            //return (MyTask)serializer.Deserialize(stream);
-
-
-            //string jsonString = File.ReadAllText(fileName);
-            //return JsonSerializer.Deserialize<MyTask>(jsonString);
-
-
             IFormatter formatter = new BinaryFormatter();
             using Stream stream = new FileStream(fileName, FileMode.Open);
             return (MyTask)formatter.Deserialize(stream);
         }
-
-        /*public override string ToString()
-        {
-            return "[" +((FileResource) Resources[0]).Path +  "]";
-        }*/
     }
 }

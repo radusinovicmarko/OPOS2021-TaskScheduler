@@ -34,7 +34,7 @@ namespace GUIApp
         private TaskScheduler.TaskScheduler scheduler;
         private bool priorityScheduling;
         private bool preemptiveScheduling;
-        public static readonly string folderPath = /*"C:\\Users\\User20\\Desktop\\saves"; //*/".." + System.IO.Path.DirectorySeparatorChar + ".." + System.IO.Path.DirectorySeparatorChar + ".." + System.IO.Path.DirectorySeparatorChar + "saves";
+        public static readonly string folderPath = ".." + System.IO.Path.DirectorySeparatorChar + ".." + System.IO.Path.DirectorySeparatorChar + ".." + System.IO.Path.DirectorySeparatorChar + "saves";
         public static readonly string tasksPath = folderPath + System.IO.Path.DirectorySeparatorChar + "task saves";
 
         private static readonly int autosaveIntervalMs = 5000;
@@ -70,7 +70,7 @@ namespace GUIApp
             tasksStackPanel = tasksSP;
             taskTypes.Add("Edge Detection Task", () =>
             {
-                EdgeDetectionTaskWindow win = new EdgeDetectionTaskWindow(priorityScheduling, preemptiveScheduling);
+                EdgeDetectionTaskWindow win = new(priorityScheduling, preemptiveScheduling);
                 if (win.ShowDialog() == false)
                     AddTaskToStackPanel(win.Task, false);
             });
@@ -117,14 +117,12 @@ namespace GUIApp
                     string name = System.IO.Path.GetFileName(file);
                     string type = name.Substring(0, name.IndexOf('_'));
                     MyTask task = (MyTask)taskNames[type].GetMethod("Deserialize").Invoke(null, new object[] { file });
-                    //System.Windows.MessageBox.Show(task.State + " " + task.Priority + " " + task.ResourcesProcessed[0] + " " + task.Terminated);
-                    //task.State = MyTask.TaskState.Ready;
                     AddTaskToStackPanel(task, true);
                     scheduler.AddTask(task);
                 }
             } catch (Exception ex)
             {
-                System.Windows.MessageBox.Show(ex.Message);
+                System.Windows.MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -189,10 +187,10 @@ namespace GUIApp
                 if (taskTypes.TryGetValue(taskType, out Action? action))
                     action?.Invoke();
                 else
-                    System.Windows.MessageBox.Show("...");
+                    System.Windows.MessageBox.Show("Error occured.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             else
-                System.Windows.MessageBox.Show("...");
+                System.Windows.MessageBox.Show("Invald parameters.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
 
         private void SaveBtn_Click(object sender, RoutedEventArgs e)

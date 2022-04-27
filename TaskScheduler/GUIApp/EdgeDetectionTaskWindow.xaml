@@ -31,7 +31,7 @@
             <StackPanel Height="130" Orientation="Vertical" Margin="0 5 0 0">
                 <StackPanel Height="35" Orientation="Horizontal" Margin="0 5 0 0">
                     <Label Content="Resources: " Width="200"/>
-                    <Button x:Name="addResourceBtn" Content="Add Resource" Width="150" Margin="5 5 5 5" Click="addResourceBtn_Click"/>
+                    <Button x:Name="addResourceBtn" Content="Add Resource" Width="150" Margin="5 5 5 5" Click="AddResourceBtn_Click"/>
                 </StackPanel>
                 <ListBox x:Name="resourcesLB" Height="82" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="5 5 5 5" MouseDoubleClick="ResourcesLB_MouseDoubleClick"/>
             </StackPanel>

@@ -45,20 +45,5 @@ namespace TaskScheduler
         {
             return base.GetHashCode();
         }
-
-        /*public XmlSchema? GetSchema()
-        {
-            return null;
-        }
-
-        public void ReadXml(XmlReader reader)
-        {
-            
-        }
-
-        public void WriteXml(XmlWriter writer)
-        {
-            task?.WriteXml(writer);
-        }*/
     }
 }
