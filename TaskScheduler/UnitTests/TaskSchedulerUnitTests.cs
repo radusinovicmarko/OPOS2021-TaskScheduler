@@ -141,7 +141,7 @@ namespace UnitTests
         public void PrioritySchedulingTest()
         {
             DeleteFiles(output);
-            TaskScheduler.TaskScheduler scheduler = new(1, 10);
+            TaskScheduler.TaskScheduler scheduler = new(1, 1);
             MyTask task1 = new EdgeDetectionTask("", new DateTime(2023, 2, 22, 0, 0, 0), 20, 1, new ControlToken(), new ControlToken(), MyTask.TaskPriority.Normal, output, new FileResource(path + "test.jpg"));
             MyTask task2 = new EdgeDetectionTask("", new DateTime(2023, 2, 22, 0, 0, 0), 20, 1, new ControlToken(), new ControlToken(), MyTask.TaskPriority.AboveNormal, output, new FileResource(path + "test2.jpg"));
             MyTask task3 = new EdgeDetectionTask("", new DateTime(2023, 2, 22, 0, 0, 0), 20, 1, new ControlToken(), new ControlToken(), MyTask.TaskPriority.High, output, new FileResource(path + "test3.jpg"));
@@ -157,7 +157,7 @@ namespace UnitTests
         public void PreemptiveSchedulingTest()
         {
             DeleteFiles(output);
-            TaskScheduler.TaskScheduler scheduler = new(1, 10);
+            TaskScheduler.TaskScheduler scheduler = new(1, 1);
             MyTask task1 = new EdgeDetectionTask("", new DateTime(2023, 2, 22, 0, 0, 0), 20, 1, new ControlToken(), new ControlToken(), MyTask.TaskPriority.Normal, output, new FileResource(path + "test.jpg"));
             MyTask task2 = new EdgeDetectionTask("", new DateTime(2023, 2, 22, 0, 0, 0), 20, 1, new ControlToken(), new ControlToken(), MyTask.TaskPriority.High, output, new FileResource(path + "test2.jpg"));
             scheduler.Start();
@@ -195,7 +195,7 @@ namespace UnitTests
         public void PIPTest()
         {
             DeleteFiles(output);
-            TaskScheduler.TaskScheduler scheduler = new(1, 10);
+            TaskScheduler.TaskScheduler scheduler = new(4, 1);
             MyTask task1 = new EdgeDetectionTask("", new DateTime(2023, 2, 22, 0, 0, 0), 20, 1, new ControlToken(), new ControlToken(), MyTask.TaskPriority.Low, output, new FileResource(path + "test.jpg"));
             MyTask task2 = new EdgeDetectionTask("", new DateTime(2023, 2, 22, 0, 0, 0), 20, 1, new ControlToken(), new ControlToken(), MyTask.TaskPriority.Normal, output, new FileResource(path + "test2.jpg"));
             MyTask task3 = new EdgeDetectionTask("", new DateTime(2023, 2, 22, 0, 0, 0), 20, 1, new ControlToken(), new ControlToken(), MyTask.TaskPriority.High, output, new FileResource(path + "test.jpg"));
