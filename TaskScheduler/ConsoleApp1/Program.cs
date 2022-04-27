@@ -38,7 +38,7 @@ scheduler.AddTask(new TaskScheduler.MyTask(() =>
 
 ControlToken? token2 = new();
 ControlToken? userToken2 = new();
-scheduler.AddTask(new EdgeDetectionTask("", new DateTime(2023, 2, 22, 0, 0, 0), 20000, 1, token2, userToken2, MyTask.TaskPriority.Normal, new FolderResource("."), new FileResource("C:\\Users\\User20\\Desktop\\test2.jfif")));
+scheduler.AddTask(new EdgeDetectionTask("", new DateTime(2023, 2, 22, 0, 0, 0), 20000, 1, token2, userToken2, MyTask.TaskPriority.Normal, ".", new FileResource("C:\\Users\\User20\\Desktop\\test2.jfif")));
 
 //MyTask task = new EdgeDetectionTask(new DateTime(2023, 2, 22, 0, 0, 0), 20000, 1, token2, userToken2, MyTask.TaskPriority.High, new FolderResource("C:\\Users\\User20\\Desktop\\"), new FileResource("C:\\Users\\User20\\Desktop\\test.jpg"), new FileResource("C:\\Users\\User20\\Desktop\\test2.jfif"), new FileResource("C:\\Users\\User20\\Desktop\\test3.png"), new FileResource("C:\\Users\\User20\\Desktop\\test4.jpg"), new FileResource("C:\\Users\\User20\\Desktop\\test5.jpg"));
 MyTask task = (MyTask) Type.GetType("TaskScheduler.EdgeDetectionTask, TaskScheduler, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null").GetMethod("Deserialize").Invoke(null, new object[] { "TaskScheduler.EdgeDetectionTask, TaskScheduler, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null_637863263498237069.bin" });
@@ -61,7 +61,7 @@ Console.WriteLine("Serialize");
 
 ControlToken? token3 = new();
 ControlToken? userToken3 = new();
-scheduler.AddTask(new EdgeDetectionTask("", new DateTime(2023, 2, 22, 0, 0, 0), 2000, 1, token3, userToken3, MyTask.TaskPriority.High, new FolderResource("."), new FileResource("C:\\Users\\User20\\Desktop\\test.jpg"), new FileResource("C:\\Users\\User20\\Desktop\\test2.jfif")));
+scheduler.AddTask(new EdgeDetectionTask("", new DateTime(2023, 2, 22, 0, 0, 0), 2000, 1, token3, userToken3, MyTask.TaskPriority.High, ".", new FileResource("C:\\Users\\User20\\Desktop\\test.jpg"), new FileResource("C:\\Users\\User20\\Desktop\\test2.jfif")));
 
 Console.WriteLine("Hello, World!");
 

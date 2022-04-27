@@ -44,6 +44,8 @@ namespace TaskScheduler
 
         protected readonly string _id;
         protected readonly DateTime _deadline;
+        [NonSerialized]
+        protected DateTime dateTimeFinished;
         protected readonly double _maxExecTime;
         protected int _maxDegreeOfParalellism;
         protected bool _terminated = false;
@@ -74,6 +76,8 @@ namespace TaskScheduler
         public DateTime Deadline => _deadline;
 
         public double MaxExecTime => _maxExecTime;
+
+        public DateTime DateTimeFinished { get { return dateTimeFinished; } set { dateTimeFinished = value; } }
 
         [XmlIgnore]
         [JsonIgnore]
@@ -149,6 +153,7 @@ namespace TaskScheduler
                 foreach (Resource r in _resources)
                     r.Lock(this);
             Action();
+            dateTimeFinished = DateTime.Now;
             if (_resources != null)
                 foreach (Resource r in _resources)
                     r.Unlock();

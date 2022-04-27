@@ -23,7 +23,7 @@ new Thread(() =>
             {
                 Thread.Sleep(500);
                 //File.AppendAllLines("log.txt", new string[] { file });
-                scheduler.AddTask(new EdgeDetectionTask(new Random().Next().ToString(), new DateTime(2023, 2, 22, 0, 0, 0), 2000, 1, new ControlToken(), new ControlToken(), MyTask.TaskPriority.Normal, new FolderResource("V:\\output\\"), new FileResource(file)));
+                scheduler.AddTask(new EdgeDetectionTask(new Random().Next().ToString(), new DateTime(2023, 2, 22, 0, 0, 0), 2000, 1, new ControlToken(), new ControlToken(), MyTask.TaskPriority.Normal, "V:\\output\\", new FileResource(file)));
                 filesProcessed.Add(file, true);
             }
         }

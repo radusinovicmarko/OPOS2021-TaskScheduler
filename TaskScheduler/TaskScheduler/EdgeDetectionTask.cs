@@ -23,15 +23,15 @@ namespace TaskScheduler
 
         private int maxHeight = 0;
 
-        private FolderResource outputFolder;
+        private string outputFolder;
 
         public EdgeDetectionTask() 
         {
             Action = this.EdgeDetection;
-            outputFolder = new FolderResource(".");
+            outputFolder = ".";
         }
 
-        public EdgeDetectionTask(string id, DateTime deadline, double maxExecTime, int maxDegreeOfParalellism, ControlToken? token, ControlToken? userToken, TaskPriority priority, FolderResource output, params Resource[] resources) 
+        public EdgeDetectionTask(string id, DateTime deadline, double maxExecTime, int maxDegreeOfParalellism, ControlToken? token, ControlToken? userToken, TaskPriority priority, string output, params Resource[] resources) 
             : base(null, id, deadline, maxExecTime, maxDegreeOfParalellism, token, userToken, priority, resources)
         {
             if (resources.Length == 0)
@@ -47,23 +47,30 @@ namespace TaskScheduler
             if (_resources.Count == 1)
             {
                 _progress = 0;
-                string resourcePath = ((FileResource)_resources.ElementAt(0)).Path;
-                Bitmap originalImage = (Bitmap)Bitmap.FromFile(resourcePath);
+                Stream stream = _resources[0].GetData();
+                Bitmap originalImage = new Bitmap(stream);
                 maxHeight = originalImage.Height;
                 Bitmap? newImage = UnsafeEdgeDetectionAlgorithm(originalImage, MaxDegreeOfParalellism);
-                string resName = resourcePath.Substring(resourcePath.LastIndexOf(Path.DirectorySeparatorChar) + 1);
-                string outputPath = Path.Combine(outputFolder.Path, "EdgeDetection_" + resName);
-                newImage?.Save(outputPath);
+                string outputPath = Path.Combine(outputFolder, "EdgeDetection_" + new Random().Next() + ".jpg");
+                if (newImage != null)
+                    newImage.Save(outputPath, ImageFormat.Jpeg);
                 _resourcesProcessed[0] = true;
+                stream.Close();
             }
             else
             {
                 foreach (var resource in _resources)
-                    maxHeight += ((Bitmap)Bitmap.FromFile(((FileResource)resource).Path)).Height;
+                {
+                    Stream stream = resource.GetData();
+                    maxHeight += new Bitmap(stream).Height;
+                    stream.Close();
+                }
                 for (int i = 0; i < _resourcesProcessed.Count; i++)
                     if (_resourcesProcessed[i])
                     {
-                        int height = ((Bitmap)Bitmap.FromFile(((FileResource)_resources[i]).Path)).Height;
+                        Stream stream = _resources[i].GetData();
+                        int height = new Bitmap(stream).Height;
+                        stream.Close();
                         noRows += height;
                     }
                 _progress = (double)noRows / maxHeight;
@@ -71,12 +78,13 @@ namespace TaskScheduler
                  {
                      if (!_resourcesProcessed[i])
                      {
-                         string resourcePath = ((FileResource)_resources.ElementAt(i)).Path;
-                         Bitmap? newImage = UnsafeEdgeDetectionAlgorithm((Bitmap)Bitmap.FromFile(resourcePath), 1);
-                         string resName = resourcePath.Substring(resourcePath.LastIndexOf(Path.DirectorySeparatorChar) + 1);
-                         string outputPath = Path.Combine(outputFolder.Path, "EdgeDetection_" + resName);
-                         newImage?.Save(outputPath);
+                         Stream stream = _resources[i].GetData();
+                         Bitmap? newImage = UnsafeEdgeDetectionAlgorithm(new Bitmap(stream), 1);
+                         string outputPath = Path.Combine(outputFolder, "EdgeDetection_" + new Random().Next() + ".jpg");
+                         if (newImage != null)
+                            newImage.Save(outputPath, ImageFormat.Jpeg);
                          _resourcesProcessed[i] = true;
+                         stream.Close();
                      }
                  });
             }
@@ -88,6 +96,7 @@ namespace TaskScheduler
                 foreach (Resource r in _resources)
                     r.Lock(this);
             Action.Invoke();
+            dateTimeFinished = DateTime.Now;
             if (_resources != null)
                 foreach (Resource r in _resources)
                     r.Unlock();
@@ -295,7 +304,7 @@ namespace TaskScheduler
 
             original.UnlockBits(bmData);
             bSrc.UnlockBits(bmSrc);
-            return original;
+            return ControlToken != null ? ControlToken.Terminated ? null : original : original;
         }
 
         public override void Serialize(string folderPath)
@@ -311,7 +320,7 @@ namespace TaskScheduler
 
             
             IFormatter formatter = new BinaryFormatter();
-            Stream stream = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
+            using Stream stream = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
             formatter.Serialize(stream, this);
         }
 

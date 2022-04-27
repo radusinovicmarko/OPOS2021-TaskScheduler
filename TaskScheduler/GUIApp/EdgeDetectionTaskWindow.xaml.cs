@@ -68,7 +68,7 @@ namespace GUIApp
 
         private void AddTaskBtn_Click(object sender, RoutedEventArgs e)
         {
-            if (!Int32.TryParse(maxExecTimeTB.Text, out int maxExecTime))
+            if (!Double.TryParse(maxExecTimeTB.Text, out double maxExecTime))
                 System.Windows.MessageBox.Show("...");
             if (!Int32.TryParse(maxDegreeOfParallelismTB.Text, out int maxDegreeOfParallelism))
                 System.Windows.MessageBox.Show("...");
@@ -82,7 +82,7 @@ namespace GUIApp
                 resources.Add(new FileResource(item));
             ControlToken? controlToken = preemptiveScheduling ? new() : null;
             string id = new Random().Next().ToString();
-            task = new EdgeDetectionTask(id, (DateTime)deadlineDTP.Value, maxExecTime, maxDegreeOfParallelism, controlToken, new ControlToken(), priority, new FolderResource(outputFolderLbl.Content.ToString()), resources.ToArray());
+            task = new EdgeDetectionTask(id, (DateTime)deadlineDTP.Value, maxExecTime, maxDegreeOfParallelism, controlToken, new ControlToken(), priority, outputFolderLbl.Content.ToString(), resources.ToArray());
             this.Hide();
         }
     }

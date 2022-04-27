@@ -11,8 +11,8 @@ namespace TaskScheduler
         private readonly int _maxNumberOfConcurrentTasks;
         [NonSerialized]
         private bool _started = false;
-        private readonly bool _preemptiveScheduling;
-        private readonly bool _priorityScheduling;
+        private readonly bool _preemptiveScheduling = true;
+        private readonly bool _priorityScheduling = true;
         private int _coresTaken = 0;
 
         [NonSerialized]
@@ -314,7 +314,7 @@ namespace TaskScheduler
                             task.ControlToken?.Terminate();
                     }
                 }
-                Thread.Sleep(1000);
+                Thread.Sleep(100);
             }
         }
 

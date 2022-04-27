@@ -10,7 +10,7 @@ using System.Xml.Serialization;
 namespace TaskScheduler
 {
     [Serializable]
-    public class Resource
+    public abstract class Resource
     {
         protected bool _locked = false;
 
@@ -33,6 +33,8 @@ namespace TaskScheduler
         }
 
         public bool Locked { get { return _locked; } private set { _locked = value; } }
+
+        public abstract Stream GetData();
 
         public override bool Equals(object? obj)
         {

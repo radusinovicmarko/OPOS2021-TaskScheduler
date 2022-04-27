@@ -29,6 +29,11 @@ namespace TaskScheduler
             return ((FileResource)obj)._path == _path;
         }
 
+        public override Stream GetData()
+        {
+            return File.Open(_path, FileMode.Open);
+        }
+
         public override int GetHashCode()
         {
             return _path.GetHashCode();
